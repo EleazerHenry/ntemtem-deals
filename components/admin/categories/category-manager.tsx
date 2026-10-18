@@ -137,15 +137,26 @@ export function CategoryManager({ categories, uploadsEnabled }: { categories: Ca
               </ol>
             </SortableContext>
           </DndContext>
-          <p className="flex items-center gap-2 border-t bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
-            {savingOrder && <Loader2 className="size-4 animate-spin" />}
-            Drag the handle<span className="sm:hidden"> (press and hold)</span> or use the arrows to change the order.
-            It saves by itself.
+          <p className="flex items-start gap-2 border-t bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+            {savingOrder && <Loader2 className="mt-0.5 size-4 shrink-0 animate-spin" />}
+            <span>
+              Drag the handle<span className="sm:hidden"> (press and hold)</span> or use the arrows to change the
+              order. It saves by itself.
+            </span>
           </p>
         </div>
       )}
 
-      <CategorySheet target={editing} uploadsEnabled={uploadsEnabled} onClose={() => setEditing(null)} onSaved={afterChange} />
+      <CategorySheet
+        target={editing}
+        uploadsEnabled={uploadsEnabled}
+        onClose={() => setEditing(null)}
+        onSaved={afterChange}
+        onDelete={(target) => {
+          setEditing(null);
+          setDeleting(target);
+        }}
+      />
       <CategoryDeleteDialog
         target={deleting}
         others={items.filter((c) => c.id !== deleting?.id).map(({ id, name }) => ({ id, name }))}
@@ -225,7 +236,7 @@ function CategoryRow({
         <Button variant="ghost" size="icon" className="hidden size-9 sm:inline-flex" onClick={onEdit} aria-label={`Edit ${category.name}`}>
           <Pencil />
         </Button>
-        <Button variant="ghost" size="icon" className="size-10 hover:text-destructive sm:size-9" onClick={onDelete} aria-label={`Delete ${category.name}`}>
+        <Button variant="ghost" size="icon" className="hidden size-9 hover:text-destructive sm:inline-flex" onClick={onDelete} aria-label={`Delete ${category.name}`}>
           <Trash2 />
         </Button>
       </div>

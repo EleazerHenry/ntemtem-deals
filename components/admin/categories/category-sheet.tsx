@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { saveCategory } from "@/app/admin/(panel)/categories/actions";
+import type { DeleteTarget } from "@/components/admin/categories/category-delete-dialog";
 import { CategoryImagePicker } from "@/components/admin/categories/category-image-picker";
 import { Field } from "@/components/admin/form-section";
 import { Button } from "@/components/ui/button";
@@ -33,17 +34,28 @@ export function CategorySheet({
   uploadsEnabled,
   onClose,
   onSaved,
+  onDelete,
 }: {
   target: CategoryEditTarget | null;
   uploadsEnabled: boolean;
   onClose: () => void;
   onSaved: () => void;
+  onDelete: (target: DeleteTarget) => void;
 }) {
   return (
     <Sheet open={target !== null} onOpenChange={(open) => !open && onClose()}>
       <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-md">
         {/* Remount per category so the form starts fresh each time */}
-        {target && <CategoryForm key={target.id} target={target} uploadsEnabled={uploadsEnabled} onClose={onClose} onSaved={onSaved} />}
+        {target && (
+          <CategoryForm
+            key={target.id}
+            target={target}
+            uploadsEnabled={uploadsEnabled}
+            onClose={onClose}
+            onSaved={onSaved}
+            onDelete={onDelete}
+          />
+        )}
       </SheetContent>
     </Sheet>
   );
@@ -54,11 +66,13 @@ function CategoryForm({
   uploadsEnabled,
   onClose,
   onSaved,
+  onDelete,
 }: {
   target: CategoryEditTarget;
   uploadsEnabled: boolean;
   onClose: () => void;
   onSaved: () => void;
+  onDelete: (target: DeleteTarget) => void;
 }) {
   const isNew = target.mode === "new";
   const [values, setValues] = useState<CategoryFormValues>(isNew ? EMPTY : target.values);
@@ -114,8 +128,10 @@ function CategoryForm({
         <SheetDescription>
           {isNew
             ? "Group similar products so customers can browse them together."
-            : target.productCount === 1
-              ? "1 product is in this category."
+            : target.productCount === 0
+              ? "No products in this category yet."
+              : target.productCount === 1
+                ? "1 product is in this category."
               : `${target.productCount} products are in this category.`}
         </SheetDescription>
       </SheetHeader>
@@ -238,6 +254,18 @@ function CategoryForm({
         </div>
 
         {formError && <p className="rounded-lg bg-destructive/10 px-3 py-2.5 text-sm text-destructive">{formError}</p>}
+
+        {target.mode === "edit" && (
+          <div className="border-t pt-5">
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => onDelete({ id: target.id, name: target.values.name, productCount: target.productCount })}
+            >
+              <Trash2 data-icon="inline-start" /> Delete category
+            </Button>
+          </div>
+        )}
       </div>
 
       <SheetFooter className="flex-row justify-end gap-2 border-t px-5 py-4">
