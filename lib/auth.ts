@@ -2,6 +2,7 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { SERVICE_UNAVAILABLE } from "@/lib/auth-errors";
 import { prisma } from "@/lib/prisma";
 
 const credentialsSchema = z.object({
@@ -27,7 +28,15 @@ export const authOptions: NextAuthOptions = {
         const parsed = credentialsSchema.safeParse(credentials);
         if (!parsed.success) return null;
 
-        const user = await prisma.user.findUnique({ where: { email: parsed.data.email } });
+        let user;
+        try {
+          user = await prisma.user.findUnique({ where: { email: parsed.data.email } });
+        } catch (error) {
+          // Surfaces as result.error on the client, so the form can say
+          // "try again" instead of blaming the password.
+          console.error("authorize: database unavailable", error);
+          throw new Error(SERVICE_UNAVAILABLE);
+        }
         const valid = await bcrypt.compare(parsed.data.password, user?.passwordHash ?? DUMMY_HASH);
         if (!user?.passwordHash || !valid) return null;
 

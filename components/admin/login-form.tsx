@@ -7,6 +7,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SERVICE_UNAVAILABLE } from "@/lib/auth-errors";
 
 // Only follow callbacks back into the admin — never off-site.
 function safeCallback(url?: string) {
@@ -34,7 +35,11 @@ export function LoginForm({ callbackUrl, notAdmin }: { callbackUrl?: string; not
         redirect: false,
       });
       if (!result || result.error) {
-        setError("That email and password don't match. Check for typos and try again.");
+        setError(
+          result?.error === SERVICE_UNAVAILABLE
+            ? "We couldn't reach the store right now. Check your internet connection and try again in a moment."
+            : "That email and password don't match. Check for typos and try again.",
+        );
         return;
       }
       router.replace(safeCallback(callbackUrl));
