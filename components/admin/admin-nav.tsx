@@ -29,7 +29,7 @@ const groups: { title: string; items: NavItem[] }[] = [
     items: [
       { label: "Overview", href: "/admin", icon: LayoutDashboard },
       { label: "Products", href: "/admin/products", icon: Package },
-      { label: "Categories", href: "/admin/categories", icon: Tags, soon: true },
+      { label: "Categories", href: "/admin/categories", icon: Tags },
     ],
   },
   {

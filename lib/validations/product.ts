@@ -196,8 +196,4 @@ export function variantPrice(basePrice: number, adjustment: number) {
   return Math.round((basePrice + adjustment) * 100) / 100;
 }
 
-export const categoryNameSchema = z
-  .string()
-  .trim()
-  .min(2, "Category names need at least 2 letters.")
-  .max(60, "Keep category names under 60 characters.");
+export { categoryNameSchema } from "@/lib/validations/category";

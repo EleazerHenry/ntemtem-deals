@@ -105,13 +105,21 @@ export function ProductForm({
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, [dirty]);
 
+  // The web address comes from the name — while the name is missing, one message is enough
+  function withoutDerivedSlugError(found: ProductFieldErrors): ProductFieldErrors {
+    if (!found.name || slugLocked) return found;
+    const rest = { ...found };
+    delete rest.slug;
+    return rest;
+  }
+
   function update(patch: Partial<ProductFormValues>) {
     const next = { ...values, ...patch };
     if ("name" in patch && !slugLocked) next.slug = slugify(patch.name ?? "");
     setValues(next);
     if (next.slug !== values.slug) setSlugSuggestion("");
     // After the first save attempt, re-check as they type so errors clear
-    if (attempted) setErrors(validate(next));
+    if (attempted) setErrors(withoutDerivedSlugError(validate(next)));
   }
 
   function focusFirstError(fieldErrors: ProductFieldErrors) {
@@ -143,7 +151,7 @@ export function ProductForm({
     setAttempted(true);
     setFormError("");
 
-    const clientErrors = validate(values);
+    const clientErrors = withoutDerivedSlugError(validate(values));
     setErrors(clientErrors);
     if (Object.keys(clientErrors).length > 0) {
       toast.error("A few things need fixing — they're highlighted in red.");

@@ -134,9 +134,9 @@ SMS notifications, Google OAuth.
 
 ## Build order (phases)
 
-0. Foundation: schema -> DB, design system, repo, CLAUDE.md  <- current
-1. Admin product management (so client can add products in parallel)
-2. Storefront catalogue (homepage, category, product detail)
+0. Foundation: schema -> DB, design system, repo, CLAUDE.md  ✓ done
+1. Admin product management (so client can add products in parallel)  ✓ done
+2. Storefront catalogue (homepage, category, product detail)  <- next
 3. Cart + checkout
 4. Paystack payments
 5. Customer accounts + order tracking
@@ -158,3 +158,27 @@ SMS notifications, Google OAuth.
 - WhatsApp number, email, socials for the site
 - Confirmed: refunds yes (T&C apply); domain ntemtemdeals.com;
   delivery 10-12 days; he uploads products & photos himself.
+
+## Client handover checklist
+
+At final handover the client must own every account the store runs on.
+Transfer (or recreate under the client's email) and confirm each one:
+
+- [ ] **Supabase** — transfer the Ntemtem project to the client's
+      organisation (Project settings -> Transfer project). Rotate the DB
+      password afterwards and update DATABASE_URL / DIRECT_URL in Vercel.
+- [ ] **Vercel** — transfer the ntemtem-deals project to the client's
+      team/account; re-check all environment variables after the move.
+- [ ] **GitHub repo** — transfer EleazerHenry/ntemtem-deals to the
+      client's GitHub account (or add him as owner); reconnect Vercel to it.
+- [ ] **Cloudinary** — currently on a SHARED account (cloud `dpg7hsmvt`,
+      which also holds `edhotel` assets). Create a fresh account under the
+      client's email, re-upload/migrate everything in `ntemtem-deals/`,
+      rewrite the stored image URLs (Product.images, Category.image) to
+      the new cloud name, then swap the CLOUDINARY_* keys in Vercel.
+- [ ] **Domain ntemtemdeals.com** — registered/transferred in the client's
+      name; DNS pointed at Vercel; HTTPS working on www + apex.
+- [ ] **Admin password** — change from the seed default (`Admin@1234`)
+      before go-live, and change the admin email to the client's own.
+- [ ] **Paystack** — live keys from the client's own account (not test keys).
+- [ ] Rotate NEXTAUTH_SECRET and any keys the developer has seen.

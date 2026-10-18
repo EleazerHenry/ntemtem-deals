@@ -13,6 +13,7 @@ export const ACCEPTED_PHOTO_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
 export const DELIVERY_TRANSFORM = "q_auto,f_auto,c_limit,w_1200";
 
 export const productPhotoFolder = (productId: string) => `ntemtem-deals/products/${productId}`;
+export const categoryImageFolder = (categoryId: string) => `ntemtem-deals/categories/${categoryId}`;
 
 export function deliveryUrl(cloudName: string, version: number, publicId: string) {
   return `https://res.cloudinary.com/${cloudName}/image/upload/${DELIVERY_TRANSFORM}/v${version}/${publicId}`;

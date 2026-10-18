@@ -8,6 +8,7 @@ import {
   destroyProductPhotos,
   isOwnProductPhoto,
   signProductPhotoUpload,
+  type SignedUpload,
 } from "@/lib/cloudinary";
 import { requireAdmin } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
@@ -191,7 +192,7 @@ export async function deleteProduct(id: string): Promise<DeleteProductResult> {
 }
 
 export type SignPhotoUploadResult =
-  | { ok: true; upload: NonNullable<ReturnType<typeof signProductPhotoUpload>> }
+  | { ok: true; upload: SignedUpload }
   | { ok: false; error: string };
 
 /** Short-lived permission for the browser to upload photos for one product. */

@@ -3,6 +3,7 @@ import { v2 as cloudinary } from "cloudinary";
 import {
   ACCEPTED_PHOTO_EXTENSIONS,
   DELIVERY_TRANSFORM,
+  categoryImageFolder,
   productPhotoFolder,
   publicIdFromUrl,
 } from "@/lib/product-images";
@@ -34,28 +35,35 @@ function client(config: CloudinaryConfig) {
  * through our server (Vercel caps request bodies at 4.5MB; photos can be 10MB).
  * Folder and formats are signed, so the browser can't change them.
  */
-export function signProductPhotoUpload(productId: string) {
+function signFolderUpload(folder: string) {
   const config = getCloudinaryConfig();
   if (!config) return null;
 
   const params = {
     timestamp: Math.round(Date.now() / 1000),
-    folder: productPhotoFolder(productId),
+    folder,
     allowed_formats: ACCEPTED_PHOTO_EXTENSIONS.join(","),
   };
   const signature = client(config).utils.api_sign_request(params, config.apiSecret);
   return { ...params, signature, apiKey: config.apiKey, cloudName: config.cloudName };
 }
 
-/** True only for photos uploaded through our signer, for this product. */
-export function isOwnProductPhoto(url: string, productId: string) {
+export const signProductPhotoUpload = (productId: string) => signFolderUpload(productPhotoFolder(productId));
+export const signCategoryImageUpload = (categoryId: string) => signFolderUpload(categoryImageFolder(categoryId));
+export type SignedUpload = NonNullable<ReturnType<typeof signFolderUpload>>;
+
+/** True only for images uploaded through our signer into this exact folder. */
+function isOwnPhoto(url: string, folder: string) {
   const config = getCloudinaryConfig();
   if (!config) return false;
   const prefix = `https://res.cloudinary.com/${config.cloudName}/image/upload/${DELIVERY_TRANSFORM}/v`;
   if (!url.startsWith(prefix)) return false;
   const publicId = publicIdFromUrl(url);
-  return !!publicId && new RegExp(`^${productPhotoFolder(productId)}/[A-Za-z0-9_-]+$`).test(publicId);
+  return !!publicId && new RegExp(`^${folder}/[A-Za-z0-9_-]+$`).test(publicId);
 }
+
+export const isOwnProductPhoto = (url: string, productId: string) => isOwnPhoto(url, productPhotoFolder(productId));
+export const isOwnCategoryImage = (url: string, categoryId: string) => isOwnPhoto(url, categoryImageFolder(categoryId));
 
 /** Best-effort removal of photos the owner deleted. Never throws. */
 export async function destroyProductPhotos(urls: string[]) {
@@ -69,11 +77,10 @@ export async function destroyProductPhotos(urls: string[]) {
   }
 }
 
-/** Remove every photo (and the folder) for a deleted product. Never throws. */
-export async function destroyProductFolder(productId: string) {
+/** Remove every image (and the folder) under one folder. Never throws. */
+async function destroyFolder(folder: string) {
   const config = getCloudinaryConfig();
   if (!config) return;
-  const folder = productPhotoFolder(productId);
   try {
     const api = client(config).api;
     await api.delete_resources_by_prefix(`${folder}/`);
@@ -82,3 +89,6 @@ export async function destroyProductFolder(productId: string) {
     console.error("Cloudinary: failed to delete folder", folder, error);
   }
 }
+
+export const destroyProductFolder = (productId: string) => destroyFolder(productPhotoFolder(productId));
+export const destroyCategoryFolder = (categoryId: string) => destroyFolder(categoryImageFolder(categoryId));
