@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const display = Bricolage_Grotesque({
@@ -36,7 +37,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en-GH"
       className={`${display.variable} ${body.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <Toaster position="top-center" richColors />
+      </body>
     </html>
   );
 }

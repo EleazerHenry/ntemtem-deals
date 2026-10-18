@@ -48,7 +48,7 @@ GHS 5,000 deposit of a GHS 15,000 total build.
 - Feel: premium, modern, Shopify-level polish. NOT a cheap template.
 - Logo files go in public/ — use a transparent PNG for navbar/footer.
 
-## The schema (11 models)
+## The schema (13 models)
 
 See prisma/schema.prisma. Models: User, Category, Product,
 ProductVariant, Address, DeliveryZone, Cart, CartItem, Order,
