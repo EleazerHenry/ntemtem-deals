@@ -16,6 +16,7 @@ export function ProductPreview({
   deliveryEstimate,
   isActive,
   isFeatured,
+  options = [],
 }: {
   imageUrl?: string;
   name: string;
@@ -26,7 +27,13 @@ export function ProductPreview({
   deliveryEstimate: string;
   isActive: boolean;
   isFeatured: boolean;
+  options?: { name: string; isActive: boolean; price: number | null }[];
 }) {
+  // With options, the card shows the cheapest available one ("From GH₵…")
+  const optionPrices = options.filter((o) => o.isActive && o.price !== null).map((o) => o.price as number);
+  const fromPrice = optionPrices.length ? Math.min(...optionPrices) : price;
+  const variesInPrice = optionPrices.length > 1 && Math.max(...optionPrices) !== Math.min(...optionPrices);
+  const shownOptions = options.slice(0, 4);
   const onSale = price !== null && compareAtPrice !== null && compareAtPrice > price;
   const percentOff = onSale ? Math.round((1 - price / compareAtPrice) * 100) : 0;
 
@@ -71,12 +78,31 @@ export function ProductPreview({
           </h3>
           <div className="flex items-baseline gap-2">
             <span className="numeric font-heading text-xl font-semibold">
-              {price !== null ? formatGHS(price) : "GH₵ —"}
+              {variesInPrice && <span className="font-sans text-sm font-medium text-muted-foreground">From </span>}
+              {fromPrice !== null ? formatGHS(fromPrice) : "GH₵ —"}
             </span>
             {onSale && (
               <span className="numeric text-sm text-muted-foreground line-through">{formatGHS(compareAtPrice)}</span>
             )}
           </div>
+          {shownOptions.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pt-0.5">
+              {shownOptions.map((o) => (
+                <span
+                  key={o.name}
+                  className={cn(
+                    "rounded-full border px-2 py-0.5 text-xs",
+                    !o.isActive && "text-muted-foreground line-through opacity-60",
+                  )}
+                >
+                  {o.name}
+                </span>
+              ))}
+              {options.length > shownOptions.length && (
+                <span className="px-1 py-0.5 text-xs text-muted-foreground">+{options.length - shownOptions.length} more</span>
+              )}
+            </div>
+          )}
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Truck className="size-3.5" /> Delivered in {deliveryEstimate || "…"}
           </p>

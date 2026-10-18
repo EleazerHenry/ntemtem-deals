@@ -46,6 +46,41 @@ const optionalMoney = z.string().transform((raw, ctx): number | null => {
 
 export const STOCK_TYPES = ["PREORDER", "IN_STOCK"] as const;
 
+export const PRICE_CHANGES = ["same", "more", "less"] as const;
+export const MAX_VARIANTS = 30;
+
+/** One option row, e.g. "Black · costs GH₵20 more". */
+const variantRowSchema = z
+  .object({
+    key: z.string(), // client-side row key only
+    id: z.string().optional(), // set for options that already exist
+    name: z
+      .string()
+      .trim()
+      .min(1, "Give this option a name, e.g. Black or Large.")
+      .max(60, "Keep option names under 60 characters."),
+    priceChange: z.enum(PRICE_CHANGES),
+    amount: z.string(),
+    isActive: z.boolean(),
+  })
+  .transform((row, ctx) => {
+    let priceAdjustment = 0;
+    if (row.priceChange !== "same") {
+      const value = parseMoney(row.amount);
+      const fail = (message: string) => {
+        ctx.addIssue({ code: "custom", path: ["amount"], message });
+        return z.NEVER;
+      };
+      if (value === undefined) return fail("Use numbers only, like 20 or 9.50.");
+      if (value === null || value === 0) {
+        return fail(`Enter how much ${row.priceChange}, or choose “Same price”.`);
+      }
+      if (value > MAX_PRICE) return fail("That amount looks too high — check for an extra zero.");
+      priceAdjustment = row.priceChange === "more" ? value : -value;
+    }
+    return { id: row.id, name: row.name, priceAdjustment, isActive: row.isActive };
+  });
+
 export const productFormSchema = z
   .object({
     name: z
@@ -76,6 +111,8 @@ export const productFormSchema = z
     isActive: z.boolean(),
     isFeatured: z.boolean(),
     images: z.array(z.url()).max(MAX_PHOTOS, `A product can have up to ${MAX_PHOTOS} photos — remove a few.`),
+    hasVariants: z.boolean(),
+    variants: z.array(variantRowSchema).max(MAX_VARIANTS, `A product can have up to ${MAX_VARIANTS} options.`),
   })
   .refine((p) => p.compareAtPrice === null || p.compareAtPrice > p.price, {
     path: ["compareAtPrice"],
@@ -85,19 +122,78 @@ export const productFormSchema = z
       const v = value as { price?: unknown; compareAtPrice?: unknown };
       return typeof v.price === "number" && (v.compareAtPrice === null || typeof v.compareAtPrice === "number");
     },
-  });
+  })
+  .superRefine(
+    (p, ctx) => {
+      if (!p.hasVariants) return;
+      if (p.variants.length < 2) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["variants"],
+          message: "Add at least two options — or turn off options if there's only one version.",
+        });
+      } else if (!p.variants.some((v) => v.isActive)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["variants"],
+          message: "At least one option must be available. To stop selling it completely, hide the product instead.",
+        });
+      }
+      const seen = new Set<string>();
+      p.variants.forEach((v, i) => {
+        const key = v.name.toLowerCase();
+        if (seen.has(key)) {
+          ctx.addIssue({ code: "custom", path: ["variants", i, "name"], message: `You already have an option called “${v.name}”.` });
+        }
+        seen.add(key);
+        if (p.price + v.priceAdjustment <= 0) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["variants", i, "amount"],
+            message: "This would make the option free or less — use a smaller amount.",
+          });
+        }
+      });
+    },
+    {
+      // Check the list even while other fields have errors, once price and rows parsed
+      when: ({ value }) => {
+        const v = value as { price?: unknown; variants?: unknown };
+        return (
+          typeof v.price === "number" &&
+          Array.isArray(v.variants) &&
+          v.variants.every((r) => typeof (r as { priceAdjustment?: unknown })?.priceAdjustment === "number")
+        );
+      },
+    },
+  );
 
 /** What the form holds (all strings for money fields). */
 export type ProductFormValues = z.input<typeof productFormSchema>;
+export type VariantRow = ProductFormValues["variants"][number];
 /** What gets saved, after parsing. */
 export type ProductData = z.output<typeof productFormSchema>;
-export type ProductFieldErrors = Partial<Record<keyof ProductFormValues, string>>;
+type VariantErrorKey = `variants.${number}.${"name" | "amount"}`;
+export type ProductFieldErrors = Partial<Record<keyof ProductFormValues | VariantErrorKey, string>>;
 
+/** Options switched off = nothing to check or save, even if half-typed rows remain in the form. */
+export function normalizeProductInput(values: ProductFormValues): ProductFormValues {
+  return values.hasVariants ? values : { ...values, variants: [] };
+}
+
+/** First message per field, keyed by path: "price", "variants", "variants.2.name". */
 export function productFieldErrors(error: z.ZodError): ProductFieldErrors {
-  const fieldErrors = z.flattenError(error).fieldErrors as Record<string, string[] | undefined>;
-  return Object.fromEntries(
-    Object.entries(fieldErrors).map(([key, messages]) => [key, messages?.[0]]),
-  ) as ProductFieldErrors;
+  const errors: Record<string, string> = {};
+  for (const issue of error.issues) {
+    const key = issue.path.join(".");
+    if (key && !(key in errors)) errors[key] = issue.message;
+  }
+  return errors as ProductFieldErrors;
+}
+
+/** "Black" +20 on a GH₵245 base -> 265. Rounded to pesewas. */
+export function variantPrice(basePrice: number, adjustment: number) {
+  return Math.round((basePrice + adjustment) * 100) / 100;
 }
 
 export const categoryNameSchema = z

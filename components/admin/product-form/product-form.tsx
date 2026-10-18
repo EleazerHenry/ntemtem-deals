@@ -10,6 +10,7 @@ import { Field, FormSection } from "@/components/admin/form-section";
 import { CategoryPicker, type CategoryOption } from "@/components/admin/product-form/category-picker";
 import { PhotoManager } from "@/components/admin/product-form/photo-manager";
 import { ProductPreview } from "@/components/admin/product-form/product-preview";
+import { VariantsEditor, variantFieldId } from "@/components/admin/product-form/variants-editor";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,11 +31,13 @@ import { formatGHS } from "@/lib/format";
 import { slugify } from "@/lib/slug";
 import { cn } from "@/lib/utils";
 import {
+  normalizeProductInput,
   parseMoney,
   productFieldErrors,
   productFormSchema,
   type ProductFieldErrors,
   type ProductFormValues,
+  variantPrice,
 } from "@/lib/validations/product";
 
 const STORE_DOMAIN = "ntemtemdeals.com";
@@ -49,6 +52,7 @@ const FIELD_ORDER: (keyof ProductFormValues)[] = [
   "images",
   "price",
   "compareAtPrice",
+  "variants",
   "deliveryEstimate",
   "categoryId",
 ];
@@ -56,7 +60,7 @@ const FIELD_ORDER: (keyof ProductFormValues)[] = [
 const fieldId = (name: keyof ProductFormValues) => `product-${name}`;
 
 function validate(values: ProductFormValues): ProductFieldErrors {
-  const result = productFormSchema.safeParse(values);
+  const result = productFormSchema.safeParse(normalizeProductInput(values));
   return result.success ? {} : productFieldErrors(result.error);
 }
 
@@ -111,11 +115,24 @@ export function ProductForm({
   }
 
   function focusFirstError(fieldErrors: ProductFieldErrors) {
-    const first = FIELD_ORDER.find((f) => fieldErrors[f]);
+    const first = FIELD_ORDER.find(
+      (f) => fieldErrors[f] || (f === "variants" && Object.keys(fieldErrors).some((k) => k.startsWith("variants."))),
+    );
     if (!first) return;
     if (first === "slug") setEditingSlug(true);
+    let targetId: string = fieldId(first);
+    if (first === "variants") {
+      // Earliest broken option row, else the options list itself
+      const rowKey = Object.keys(fieldErrors)
+        .filter((k) => k.startsWith("variants.") && fieldErrors[k as keyof ProductFieldErrors])
+        .sort((a, b) => Number(a.split(".")[1]) - Number(b.split(".")[1]))[0];
+      if (rowKey) {
+        const [, index, field] = rowKey.split(".");
+        targetId = variantFieldId(Number(index), field as "name" | "amount");
+      }
+    }
     requestAnimationFrame(() => {
-      const el = document.getElementById(fieldId(first));
+      const el = document.getElementById(targetId);
       el?.scrollIntoView({ behavior: "smooth", block: "center" });
       el?.focus({ preventScroll: true });
     });
@@ -376,6 +393,17 @@ export function ProductForm({
             )}
           </FormSection>
 
+          <FormSection title="Options" description="Colours, sizes, lengths — anything the customer picks between.">
+            <VariantsEditor
+              basePrice={price}
+              enabled={values.hasVariants}
+              rows={values.variants}
+              savedCount={savedValues.hasVariants ? savedValues.variants.filter((v) => v.id).length : 0}
+              errors={errors}
+              onChange={(patch) => update(patch)}
+            />
+          </FormSection>
+
           <FormSection title="Availability & delivery">
             <RadioGroup
               value={values.stockType}
@@ -528,6 +556,21 @@ export function ProductForm({
             deliveryEstimate={values.deliveryEstimate.trim()}
             isActive={values.isActive}
             isFeatured={values.isFeatured}
+            options={
+              values.hasVariants
+                ? values.variants
+                    .filter((v) => v.name.trim())
+                    .map((v) => {
+                      const amount = v.priceChange === "same" ? 0 : (parseMoney(v.amount) ?? 0);
+                      const adjustment = v.priceChange === "less" ? -amount : amount;
+                      return {
+                        name: v.name.trim(),
+                        isActive: v.isActive,
+                        price: price === null ? null : variantPrice(price, adjustment),
+                      };
+                    })
+                : []
+            }
           />
         </div>
       </div>

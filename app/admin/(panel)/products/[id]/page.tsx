@@ -13,7 +13,10 @@ import { cn } from "@/lib/utils";
 type Props = { params: Promise<{ id: string }> };
 
 async function getProduct(id: string) {
-  return prisma.product.findUnique({ where: { id } });
+  return prisma.product.findUnique({
+    where: { id },
+    include: { variants: { orderBy: [{ sortOrder: "asc" }, { id: "asc" }] } },
+  });
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -84,6 +87,18 @@ export default async function EditProductPage({ params }: Props) {
           isActive: product.isActive,
           isFeatured: product.isFeatured,
           images: product.images,
+          hasVariants: product.hasVariants,
+          variants: product.variants.map((v) => {
+            const adjustment = v.priceAdjustment.toNumber();
+            return {
+              key: v.id,
+              id: v.id,
+              name: v.name,
+              priceChange: adjustment > 0 ? "more" : adjustment < 0 ? "less" : "same",
+              amount: adjustment === 0 ? "" : Math.abs(adjustment).toString(),
+              isActive: v.isActive,
+            };
+          }),
         }}
       />
     </>

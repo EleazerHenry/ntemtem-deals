@@ -44,6 +44,8 @@ export default async function NewProductPage() {
           isActive: true,
           isFeatured: false,
           images: [],
+          hasVariants: false,
+          variants: [],
         }}
       />
     </>

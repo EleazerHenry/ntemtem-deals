@@ -14,6 +14,7 @@ import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
 import {
   categoryNameSchema,
+  normalizeProductInput,
   productFieldErrors,
   productFormSchema,
   type ProductFieldErrors,
@@ -56,7 +57,7 @@ export async function saveProduct(
   const { id, isNew } = target;
   if (!PRODUCT_ID.test(id)) return { ok: false, formError: "Something went wrong — please reload the page." };
 
-  const parsed = productFormSchema.safeParse(input);
+  const parsed = productFormSchema.safeParse(normalizeProductInput(input));
   if (!parsed.success) return { ok: false, fieldErrors: productFieldErrors(parsed.error) };
   const data = parsed.data;
 
@@ -70,7 +71,10 @@ export async function saveProduct(
   const [category, slugOwner, existing] = await Promise.all([
     prisma.category.findUnique({ where: { id: data.categoryId }, select: { id: true } }),
     prisma.product.findFirst({ where: { slug: data.slug, NOT: { id } }, select: { name: true } }),
-    prisma.product.findUnique({ where: { id }, select: { slug: true, images: true } }),
+    prisma.product.findUnique({
+      where: { id },
+      select: { slug: true, images: true, variants: { select: { id: true } } },
+    }),
   ]);
 
   if (!isNew && !existing) {
@@ -78,6 +82,10 @@ export async function saveProduct(
   }
   if (isNew && existing) {
     return { ok: false, formError: "This product was already saved. Go back to Products to see it." };
+  }
+  const existingVariantIds = new Set(existing?.variants.map((v) => v.id));
+  if (data.variants.some((v) => v.id && !existingVariantIds.has(v.id))) {
+    return { ok: false, formError: "Your options changed somewhere else — reload the page and try again." };
   }
   if (!category) {
     return { ok: false, fieldErrors: { categoryId: "That category no longer exists. Please choose another." } };
@@ -102,12 +110,40 @@ export async function saveProduct(
     isActive: data.isActive,
     isFeatured: data.isFeatured,
     images: data.images,
+    hasVariants: data.hasVariants,
   };
+  const variantFields = (v: (typeof data.variants)[number], sortOrder: number) => ({
+    name: v.name,
+    priceAdjustment: v.priceAdjustment,
+    isActive: v.isActive,
+    sortOrder,
+  });
 
   try {
-    const product = isNew
-      ? await prisma.product.create({ data: { id, ...fields }, select: { id: true, name: true } })
-      : await prisma.product.update({ where: { id }, data: fields, select: { id: true, name: true } });
+    let product: { id: string; name: string };
+    if (isNew) {
+      product = await prisma.product.create({
+        data: { id, ...fields, variants: { create: data.variants.map(variantFields) } },
+        select: { id: true, name: true },
+      });
+    } else {
+      const keptIds = new Set(data.variants.flatMap((v) => (v.id ? [v.id] : [])));
+      const removedIds = [...existingVariantIds].filter((vid) => !keptIds.has(vid));
+      const [updated] = await prisma.$transaction([
+        prisma.product.update({ where: { id }, data: fields, select: { id: true, name: true } }),
+        // Carts holding a removed option would silently fall back to the base product
+        prisma.cartItem.deleteMany({ where: { variantId: { in: removedIds } } }),
+        // Past orders keep the option name in their snapshot; their variantId becomes null
+        prisma.productVariant.deleteMany({ where: { id: { in: removedIds } } }),
+        ...data.variants.flatMap((v, i) =>
+          v.id ? [prisma.productVariant.update({ where: { id: v.id }, data: variantFields(v, i) })] : [],
+        ),
+        prisma.productVariant.createMany({
+          data: data.variants.flatMap((v, i) => (v.id ? [] : [{ productId: id, ...variantFields(v, i) }])),
+        }),
+      ]);
+      product = updated;
+    }
 
     // Photos removed in the form are deleted from Cloudinary only once the save lands
     const removed = existing?.images.filter((url) => !data.images.includes(url)) ?? [];
