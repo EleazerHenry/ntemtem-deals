@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { requireAdmin } from "@/lib/dal";
 import { formatGHS } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { thumbnailUrl } from "@/lib/product-images";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Products" };
@@ -129,7 +130,7 @@ export default async function AdminProductsPage({
                   >
                     <div className="relative grid size-14 shrink-0 place-items-center overflow-hidden rounded-xl border bg-muted sm:size-16">
                       {p.images[0] ? (
-                        <Image src={p.images[0]} alt="" fill sizes="64px" className="object-cover" unoptimized />
+                        <Image src={thumbnailUrl(p.images[0], 128)} alt="" fill sizes="64px" className="object-cover" unoptimized />
                       ) : (
                         <ImageIcon className="size-5 text-muted-foreground" />
                       )}

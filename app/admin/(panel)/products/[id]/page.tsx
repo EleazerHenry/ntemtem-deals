@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { ProductForm } from "@/components/admin/product-form/product-form";
 import { Badge } from "@/components/ui/badge";
+import { getCloudinaryConfig } from "@/lib/cloudinary";
 import { requireAdmin } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
@@ -68,6 +69,8 @@ export default async function EditProductPage({ params }: Props) {
         // Remount with fresh values after a save that changed the server copy
         key={product.updatedAt.toISOString()}
         productId={product.id}
+        isNew={false}
+        uploadsEnabled={getCloudinaryConfig() !== null}
         categories={categories}
         initialValues={{
           name: product.name,
@@ -80,6 +83,7 @@ export default async function EditProductPage({ params }: Props) {
           deliveryEstimate: product.deliveryEstimate,
           isActive: product.isActive,
           isFeatured: product.isFeatured,
+          images: product.images,
         }}
       />
     </>

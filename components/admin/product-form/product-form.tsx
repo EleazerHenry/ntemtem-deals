@@ -3,11 +3,12 @@
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Clock, ImagePlus, Loader2, PackageCheck, Pencil, Trash2 } from "lucide-react";
+import { Clock, Loader2, PackageCheck, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { deleteProduct, saveProduct } from "@/app/admin/(panel)/products/actions";
 import { Field, FormSection } from "@/components/admin/form-section";
 import { CategoryPicker, type CategoryOption } from "@/components/admin/product-form/category-picker";
+import { PhotoManager } from "@/components/admin/product-form/photo-manager";
 import { ProductPreview } from "@/components/admin/product-form/product-preview";
 import {
   AlertDialog,
@@ -45,6 +46,7 @@ const FIELD_ORDER: (keyof ProductFormValues)[] = [
   "name",
   "slug",
   "description",
+  "images",
   "price",
   "compareAtPrice",
   "deliveryEstimate",
@@ -60,15 +62,19 @@ function validate(values: ProductFormValues): ProductFieldErrors {
 
 export function ProductForm({
   productId,
+  isNew,
+  uploadsEnabled,
   initialValues,
   categories: initialCategories,
 }: {
-  productId: string | null;
+  /** For new products, an id generated up front so photos upload to the right folder. */
+  productId: string;
+  isNew: boolean;
+  uploadsEnabled: boolean;
   initialValues: ProductFormValues;
   categories: CategoryOption[];
 }) {
   const router = useRouter();
-  const isNew = productId === null;
 
   const [values, setValues] = useState(initialValues);
   const [savedValues, setSavedValues] = useState(initialValues);
@@ -83,6 +89,7 @@ export function ProductForm({
   const [editingSlug, setEditingSlug] = useState(false);
   const [saving, startSaving] = useTransition();
   const [deleting, startDeleting] = useTransition();
+  const [photosBusy, setPhotosBusy] = useState(false);
 
   const dirty = JSON.stringify(values) !== JSON.stringify(savedValues);
 
@@ -128,7 +135,7 @@ export function ProductForm({
     }
 
     startSaving(async () => {
-      const result = await saveProduct(productId, values);
+      const result = await saveProduct({ id: productId, isNew }, values);
       if (!result.ok) {
         setErrors(result.fieldErrors ?? {});
         setFormError(result.formError ?? "");
@@ -154,7 +161,6 @@ export function ProductForm({
   }
 
   function onDelete() {
-    if (!productId) return;
     startDeleting(async () => {
       const result = await deleteProduct(productId);
       if (!result.ok) {
@@ -311,18 +317,19 @@ export function ProductForm({
             </Field>
           </FormSection>
 
-          <FormSection title="Photos">
-            <div className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed bg-muted/40 px-6 py-10 text-center">
-              <span className="grid size-12 place-items-center rounded-xl bg-card text-muted-foreground shadow-soft">
-                <ImagePlus className="size-6" />
-              </span>
-              <div>
-                <p className="font-medium">Photos: coming in the next step</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Soon you&apos;ll drag photos in here. Save the product now and add photos once it&apos;s ready.
-                </p>
-              </div>
-            </div>
+          <FormSection title="Photos" description="Clear, bright photos sell better. Show it from a few angles.">
+            <PhotoManager
+              id={fieldId("images")}
+              productId={productId}
+              images={values.images}
+              onImagesChange={(change) => {
+                setValues((v) => ({ ...v, images: change(v.images) }));
+                setErrors((e) => ({ ...e, images: undefined }));
+              }}
+              onBusyChange={setPhotosBusy}
+              enabled={uploadsEnabled}
+              error={errors.images}
+            />
           </FormSection>
 
           <FormSection title="Price" description="All prices are in Ghana cedis (GH₵).">
@@ -512,6 +519,7 @@ export function ProductForm({
           </FormSection>
 
           <ProductPreview
+            imageUrl={values.images[0]}
             name={values.name.trim()}
             categoryName={categoryName}
             price={price}
@@ -528,7 +536,11 @@ export function ProductForm({
       <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-card/95 backdrop-blur lg:left-[272px]">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-8">
           <p className="min-w-0 truncate text-sm text-muted-foreground">
-            {formError ? (
+            {photosBusy ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="size-4 animate-spin" /> Uploading photos…
+              </span>
+            ) : formError ? (
               <span className="text-destructive">{formError}</span>
             ) : dirty ? (
               <span className="flex items-center gap-2">
@@ -544,7 +556,7 @@ export function ProductForm({
             <Button asChild variant="outline" size="lg" className="hidden sm:inline-flex">
               <Link href="/admin/products">Cancel</Link>
             </Button>
-            <Button type="submit" size="lg" disabled={saving || (!isNew && !dirty)} className="min-w-32">
+            <Button type="submit" size="lg" disabled={saving || photosBusy || (!isNew && !dirty)} className="min-w-32">
               {saving && <Loader2 className="animate-spin" data-icon="inline-start" />}
               {saving ? "Saving…" : isNew ? "Save product" : "Save changes"}
             </Button>

@@ -1,7 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { Prisma } from "@prisma/client";
+import {
+  destroyProductFolder,
+  destroyProductPhotos,
+  isOwnProductPhoto,
+  signProductPhotoUpload,
+} from "@/lib/cloudinary";
 import { requireAdmin } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
@@ -13,15 +20,19 @@ import {
   type ProductFormValues,
 } from "@/lib/validations/product";
 
+// Existing products use cuids; new ones get a UUID up front so their photos
+// can be uploaded into the right folder before the first save.
+const PRODUCT_ID = /^[A-Za-z0-9-]{20,40}$/;
+
 export type SaveProductResult =
   | { ok: true; id: string; name: string }
   | { ok: false; fieldErrors?: ProductFieldErrors; formError?: string; slugSuggestion?: string };
 
-async function availableSlug(base: string, excludeId: string | null) {
+async function availableSlug(base: string, excludeId: string) {
   for (let n = 2; n < 100; n++) {
     const candidate = `${base}-${n}`;
     const taken = await prisma.product.findFirst({
-      where: { slug: candidate, ...(excludeId && { NOT: { id: excludeId } }) },
+      where: { slug: candidate, NOT: { id: excludeId } },
       select: { id: true },
     });
     if (!taken) return candidate;
@@ -35,25 +46,38 @@ function revalidateProductPages(slug?: string) {
   if (slug) revalidatePath(`/products/${slug}`);
 }
 
-/** Create (id = null) or update a product. */
-export async function saveProduct(id: string | null, input: ProductFormValues): Promise<SaveProductResult> {
+/** Create (isNew) or update the product with this id. */
+export async function saveProduct(
+  target: { id: string; isNew: boolean },
+  input: ProductFormValues,
+): Promise<SaveProductResult> {
   await requireAdmin();
+
+  const { id, isNew } = target;
+  if (!PRODUCT_ID.test(id)) return { ok: false, formError: "Something went wrong — please reload the page." };
 
   const parsed = productFormSchema.safeParse(input);
   if (!parsed.success) return { ok: false, fieldErrors: productFieldErrors(parsed.error) };
   const data = parsed.data;
 
+  if (!data.images.every((url) => isOwnProductPhoto(url, id))) {
+    return {
+      ok: false,
+      fieldErrors: { images: "One of the photos couldn't be checked. Remove it and upload it again." },
+    };
+  }
+
   const [category, slugOwner, existing] = await Promise.all([
     prisma.category.findUnique({ where: { id: data.categoryId }, select: { id: true } }),
-    prisma.product.findFirst({
-      where: { slug: data.slug, ...(id && { NOT: { id } }) },
-      select: { name: true },
-    }),
-    id ? prisma.product.findUnique({ where: { id }, select: { slug: true } }) : null,
+    prisma.product.findFirst({ where: { slug: data.slug, NOT: { id } }, select: { name: true } }),
+    prisma.product.findUnique({ where: { id }, select: { slug: true, images: true } }),
   ]);
 
-  if (id && !existing) {
+  if (!isNew && !existing) {
     return { ok: false, formError: "This product no longer exists — it may have been deleted." };
+  }
+  if (isNew && existing) {
+    return { ok: false, formError: "This product was already saved. Go back to Products to see it." };
   }
   if (!category) {
     return { ok: false, fieldErrors: { categoryId: "That category no longer exists. Please choose another." } };
@@ -77,19 +101,28 @@ export async function saveProduct(id: string | null, input: ProductFormValues): 
     deliveryEstimate: data.deliveryEstimate,
     isActive: data.isActive,
     isFeatured: data.isFeatured,
+    images: data.images,
   };
 
   try {
-    const product = id
-      ? await prisma.product.update({ where: { id }, data: fields, select: { id: true, name: true } })
-      : await prisma.product.create({ data: fields, select: { id: true, name: true } });
+    const product = isNew
+      ? await prisma.product.create({ data: { id, ...fields }, select: { id: true, name: true } })
+      : await prisma.product.update({ where: { id }, data: fields, select: { id: true, name: true } });
+
+    // Photos removed in the form are deleted from Cloudinary only once the save lands
+    const removed = existing?.images.filter((url) => !data.images.includes(url)) ?? [];
+    if (removed.length) after(() => destroyProductPhotos(removed));
 
     revalidateProductPages(data.slug);
     if (existing && existing.slug !== data.slug) revalidatePath(`/products/${existing.slug}`);
     return { ok: true, ...product };
   } catch (error) {
     // Two saves racing for the same web address
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002" &&
+      String(error.meta?.target).includes("slug")
+    ) {
       return {
         ok: false,
         fieldErrors: { slug: "Another product just took this web address." },
@@ -109,6 +142,7 @@ export async function deleteProduct(id: string): Promise<DeleteProductResult> {
   try {
     // Order items keep their name/price snapshots; their productId becomes null.
     const product = await prisma.product.delete({ where: { id }, select: { slug: true } });
+    after(() => destroyProductFolder(id));
     revalidateProductPages(product.slug);
     return { ok: true };
   } catch (error) {
@@ -118,6 +152,20 @@ export async function deleteProduct(id: string): Promise<DeleteProductResult> {
     console.error("deleteProduct failed", error);
     return { ok: false, error: "Couldn't delete this product. Please try again." };
   }
+}
+
+export type SignPhotoUploadResult =
+  | { ok: true; upload: NonNullable<ReturnType<typeof signProductPhotoUpload>> }
+  | { ok: false; error: string };
+
+/** Short-lived permission for the browser to upload photos for one product. */
+export async function signPhotoUpload(productId: string): Promise<SignPhotoUploadResult> {
+  await requireAdmin();
+  if (!PRODUCT_ID.test(productId)) return { ok: false, error: "Something went wrong — please reload the page." };
+
+  const upload = signProductPhotoUpload(productId);
+  if (!upload) return { ok: false, error: "Photo upload isn't set up yet. You can still save the product without photos." };
+  return { ok: true, upload };
 }
 
 export type CreateCategoryResult =

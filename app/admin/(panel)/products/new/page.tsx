@@ -1,8 +1,10 @@
+import { randomUUID } from "node:crypto";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { ProductForm } from "@/components/admin/product-form/product-form";
+import { getCloudinaryConfig } from "@/lib/cloudinary";
 import { requireAdmin } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 
@@ -26,7 +28,9 @@ export default async function NewProductPage() {
       </Link>
       <PageHeader title="Add product" description="Fill in the details below. You can change anything later." />
       <ProductForm
-        productId={null}
+        productId={randomUUID()}
+        isNew
+        uploadsEnabled={getCloudinaryConfig() !== null}
         categories={categories}
         initialValues={{
           name: "",
@@ -39,6 +43,7 @@ export default async function NewProductPage() {
           deliveryEstimate: "10-12 days",
           isActive: true,
           isFeatured: false,
+          images: [],
         }}
       />
     </>

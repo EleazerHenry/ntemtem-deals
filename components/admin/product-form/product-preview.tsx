@@ -1,10 +1,13 @@
+import Image from "next/image";
 import { Clock, EyeOff, ImageIcon, PackageCheck, Star, Truck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatGHS } from "@/lib/format";
+import { thumbnailUrl } from "@/lib/product-images";
 import { cn } from "@/lib/utils";
 
 /** How the product card will look to shoppers, updated as the owner types. */
 export function ProductPreview({
+  imageUrl,
   name,
   categoryName,
   price,
@@ -14,6 +17,7 @@ export function ProductPreview({
   isActive,
   isFeatured,
 }: {
+  imageUrl?: string;
   name: string;
   categoryName?: string;
   price: number | null;
@@ -44,10 +48,14 @@ export function ProductPreview({
         )}
       >
         <div className="relative grid aspect-square place-items-center bg-linear-to-br from-brand-50 to-brand-100">
-          <div className="flex flex-col items-center gap-2 text-brand-800/40">
-            <ImageIcon className="size-10" />
-            <span className="text-xs font-medium">Photos come next</span>
-          </div>
+          {imageUrl ? (
+            <Image src={thumbnailUrl(imageUrl, 680)} alt="" fill sizes="340px" className="object-cover" unoptimized />
+          ) : (
+            <div className="flex flex-col items-center gap-2 text-brand-800/40">
+              <ImageIcon className="size-10" />
+              <span className="text-xs font-medium">Your main photo</span>
+            </div>
+          )}
           <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
             {onSale && <Badge className="bg-ghana-red text-paper">-{percentOff}%</Badge>}
             <Badge variant="outline" className="bg-card/90 backdrop-blur">

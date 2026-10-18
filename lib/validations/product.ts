@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAX_PHOTOS } from "@/lib/product-images";
 import { SLUG_PATTERN } from "@/lib/slug";
 
 export const MAX_PRICE = 1_000_000;
@@ -74,6 +75,7 @@ export const productFormSchema = z
       .max(40, "Keep the delivery time short, e.g. 10-12 days."),
     isActive: z.boolean(),
     isFeatured: z.boolean(),
+    images: z.array(z.url()).max(MAX_PHOTOS, `A product can have up to ${MAX_PHOTOS} photos — remove a few.`),
   })
   .refine((p) => p.compareAtPrice === null || p.compareAtPrice > p.price, {
     path: ["compareAtPrice"],
