@@ -178,7 +178,8 @@ export function ProductForm({
 
   return (
     <form onSubmit={onSubmit} noValidate className="pb-28">
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+      {/* grid-cols-1 = minmax(0,1fr): stops a long web address widening the page on phones */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         {/* Main column */}
         <div className="space-y-6">
           <FormSection title="Product details" description="What it is, in your own words.">
