@@ -123,3 +123,103 @@ export async function getDeals(limit = 8) {
 }
 
 export const getLiveProductCount = cache(() => prisma.product.count({ where: live }));
+
+// ---- Product page ----
+
+export type ProductPageData = {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  images: string[];
+  stockType: "PREORDER" | "IN_STOCK";
+  deliveryEstimate: string;
+  category: { name: string; slug: string };
+  price: number;
+  compareAtPrice: number | null;
+  /** Options in the owner's order; unavailable ones are shown greyed out */
+  variants: {
+    id: string;
+    name: string;
+    price: number;
+    /** Keeps the product's saving: was-price shifted by the option's adjustment */
+    compareAtPrice: number | null;
+    isActive: boolean;
+    /** Index into images, when the option has its own photo */
+    imageIndex: number | null;
+  }[];
+};
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+export const getProductPage = cache(async (slug: string): Promise<ProductPageData | null> => {
+  const p = await prisma.product.findFirst({
+    where: { slug, ...live },
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      description: true,
+      images: true,
+      stockType: true,
+      deliveryEstimate: true,
+      price: true,
+      compareAtPrice: true,
+      hasVariants: true,
+      category: { select: { name: true, slug: true } },
+      variants: {
+        orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+        select: { id: true, name: true, priceAdjustment: true, isActive: true, imageUrl: true },
+      },
+    },
+  });
+  if (!p) return null;
+
+  const base = p.price.toNumber();
+  const was = p.compareAtPrice?.toNumber() ?? null;
+  const onSale = was !== null && was > base;
+  return {
+    id: p.id,
+    slug: p.slug,
+    name: p.name,
+    description: p.description,
+    images: p.images,
+    stockType: p.stockType,
+    deliveryEstimate: p.deliveryEstimate,
+    category: p.category,
+    price: base,
+    compareAtPrice: onSale ? was : null,
+    variants: p.hasVariants
+      ? p.variants.map((v) => {
+          const adj = v.priceAdjustment.toNumber();
+          const index = v.imageUrl ? p.images.indexOf(v.imageUrl) : -1;
+          return {
+            id: v.id,
+            name: v.name,
+            price: round2(base + adj),
+            compareAtPrice: onSale ? round2(was! + adj) : null,
+            isActive: v.isActive,
+            imageIndex: index >= 0 ? index : null,
+          };
+        })
+      : [],
+  };
+});
+
+/** Same category first, topped up with the newest from elsewhere. */
+export async function getRelatedProducts(productId: string, categorySlug: string, limit = 4) {
+  const same = await prisma.product.findMany({
+    where: { ...live, id: { not: productId }, category: { slug: categorySlug } },
+    orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
+    take: limit,
+    select: cardSelect,
+  });
+  if (same.length >= limit) return same.map(toCard);
+  const more = await prisma.product.findMany({
+    where: { ...live, id: { notIn: [productId, ...same.map((s) => s.id)] } },
+    orderBy: { createdAt: "desc" },
+    take: limit - same.length,
+    select: cardSelect,
+  });
+  return [...same, ...more].map(toCard);
+}

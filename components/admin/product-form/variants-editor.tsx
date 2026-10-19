@@ -1,9 +1,12 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Plus, X } from "lucide-react";
+import Image from "next/image";
+import { ArrowDown, ArrowUp, Check, ImageIcon, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
+import { thumbnailUrl } from "@/lib/product-images";
 import { formatGHS } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
@@ -26,7 +29,7 @@ const EXAMPLES = ["e.g. Black", "e.g. White", "e.g. Blue", "e.g. Red"];
 export const variantFieldId = (index: number, field: "name" | "amount") => `variant-${index}-${field}`;
 
 export function newVariantRow(): VariantRow {
-  return { key: crypto.randomUUID(), name: "", priceChange: "same", amount: "", isActive: true };
+  return { key: crypto.randomUUID(), name: "", priceChange: "same", amount: "", isActive: true, imageUrl: "" };
 }
 
 /** The adjustment a row currently represents, or null if the amount isn't valid yet. */
@@ -42,10 +45,13 @@ export function VariantsEditor({
   enabled,
   rows,
   savedCount,
+  photos,
   errors,
   onChange,
 }: {
   basePrice: number | null;
+  /** The product's photos — an option can point at one of them */
+  photos: string[];
   enabled: boolean;
   rows: VariantRow[];
   /** Options already saved — warn before switching off deletes them. */
@@ -242,6 +248,7 @@ export function VariantsEditor({
                   </div>
                   {amountError && <p className="text-sm text-destructive">{amountError}</p>}
 
+                  <div className="flex flex-wrap items-center justify-between gap-3">
                   <label className="flex w-fit cursor-pointer items-center gap-2.5 text-sm">
                     <Switch
                       size="sm"
@@ -253,6 +260,14 @@ export function VariantsEditor({
                       {row.isActive ? "Available" : "Not available right now — customers see it greyed out"}
                     </span>
                   </label>
+                  <OptionPhotoPicker
+                    index={index}
+                    photos={photos}
+                    // A photo removed from the product no longer counts
+                    value={photos.includes(row.imageUrl) ? row.imageUrl : ""}
+                    onChange={(imageUrl) => patch(index, { imageUrl })}
+                  />
+                  </div>
                 </li>
               );
             })}
@@ -283,5 +298,65 @@ export function VariantsEditor({
         </div>
       )}
     </div>
+  );
+}
+
+/** Pick which of the product's photos shows when a customer chooses this option. */
+function OptionPhotoPicker({
+  index,
+  photos,
+  value,
+  onChange,
+}: {
+  index: number;
+  photos: string[];
+  value: string;
+  onChange: (url: string) => void;
+}) {
+  if (photos.length === 0) return null;
+  return (
+    <Popover>
+      <PopoverTrigger
+        className="flex h-9 items-center gap-2 rounded-lg border bg-card pr-3 pl-1 text-sm hover:bg-muted"
+        aria-label={`Photo for option ${index + 1}`}
+      >
+        <span className="relative grid size-7 place-items-center overflow-hidden rounded-md bg-muted text-muted-foreground">
+          {value ? <Image src={thumbnailUrl(value, 56)} alt="" fill sizes="28px" className="object-cover" unoptimized /> : <ImageIcon className="size-4" />}
+        </span>
+        {value ? "Option photo" : "Choose photo"}
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-72 p-3">
+        <p className="text-sm font-medium">Photo for this option</p>
+        <p className="mb-3 text-xs text-muted-foreground">Shown when a customer picks it. Upload photos above first.</p>
+        <div className="grid grid-cols-4 gap-2">
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            className={cn(
+              "grid aspect-square place-items-center rounded-lg border text-[0.65rem] leading-tight text-muted-foreground",
+              !value && "border-ink ring-2 ring-ink",
+            )}
+          >
+            None
+          </button>
+          {photos.map((url, i) => (
+            <button
+              key={url}
+              type="button"
+              onClick={() => onChange(url)}
+              aria-label={`Use photo ${i + 1}`}
+              className={cn("relative aspect-square overflow-hidden rounded-lg border", value === url && "ring-2 ring-ink")}
+            >
+              <Image src={thumbnailUrl(url, 120)} alt="" fill sizes="60px" className="object-cover" unoptimized />
+              {value === url && (
+                <span className="absolute right-1 bottom-1 grid size-4 place-items-center rounded-full bg-ink text-paper">
+                  <Check className="size-3" />
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }

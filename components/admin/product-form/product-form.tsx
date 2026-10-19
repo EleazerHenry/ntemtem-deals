@@ -407,6 +407,7 @@ export function ProductForm({
               enabled={values.hasVariants}
               rows={values.variants}
               savedCount={savedValues.hasVariants ? savedValues.variants.filter((v) => v.id).length : 0}
+              photos={values.images}
               errors={errors}
               onChange={(patch) => update(patch)}
             />

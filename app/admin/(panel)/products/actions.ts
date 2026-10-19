@@ -117,6 +117,8 @@ export async function saveProduct(
     priceAdjustment: v.priceAdjustment,
     isActive: v.isActive,
     sortOrder,
+    // Only one of this product's own photos; a since-removed photo just falls back to none
+    imageUrl: v.imageUrl && data.images.includes(v.imageUrl) ? v.imageUrl : null,
   });
 
   try {

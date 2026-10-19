@@ -1,10 +1,13 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import { MessageCircle } from "lucide-react";
-import { whatsappLink } from "@/lib/site";
 
 /** Floating "chat to order" button — very Ghana commerce. Hidden until a number is set. */
-export function WhatsAppFloat() {
-  const href = whatsappLink("Hi Ntemtem Deals! I'd like to order.");
-  if (!href) return null;
+export function WhatsAppFloat({ href }: { href: string | null }) {
+  const pathname = usePathname();
+  // Product pages have their own WhatsApp button and a phone buy bar this would cover
+  if (!href || pathname.startsWith("/products/")) return null;
   return (
     <a
       href={href}

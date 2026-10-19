@@ -1,6 +1,7 @@
 import { StoreFooter } from "@/components/store/store-footer";
 import { StoreHeader } from "@/components/store/store-header";
 import { WhatsAppFloat } from "@/components/store/whatsapp-float";
+import { whatsappLink } from "@/lib/site";
 import { getStoreCategories } from "@/lib/storefront";
 
 // Pages are built once and refreshed when the owner edits products or
@@ -16,7 +17,7 @@ export default async function StoreLayout({ children }: { children: React.ReactN
       <StoreHeader categories={categories} />
       <main className="flex-1">{children}</main>
       <StoreFooter categories={categories} />
-      <WhatsAppFloat />
+      <WhatsAppFloat href={whatsappLink("Hi Ntemtem Deals! I'd like to order.")} />
     </>
   );
 }

@@ -97,6 +97,7 @@ export default async function EditProductPage({ params }: Props) {
               priceChange: adjustment > 0 ? "more" : adjustment < 0 ? "less" : "same",
               amount: adjustment === 0 ? "" : Math.abs(adjustment).toString(),
               isActive: v.isActive,
+              imageUrl: v.imageUrl ?? "",
             };
           }),
         }}

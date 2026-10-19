@@ -62,6 +62,7 @@ const variantRowSchema = z
     priceChange: z.enum(PRICE_CHANGES),
     amount: z.string(),
     isActive: z.boolean(),
+    imageUrl: z.string(), // "" = no photo of its own
   })
   .transform((row, ctx) => {
     let priceAdjustment = 0;
@@ -78,7 +79,7 @@ const variantRowSchema = z
       if (value > MAX_PRICE) return fail("That amount looks too high — check for an extra zero.");
       priceAdjustment = row.priceChange === "more" ? value : -value;
     }
-    return { id: row.id, name: row.name, priceAdjustment, isActive: row.isActive };
+    return { id: row.id, name: row.name, priceAdjustment, isActive: row.isActive, imageUrl: row.imageUrl || null };
   });
 
 export const productFormSchema = z

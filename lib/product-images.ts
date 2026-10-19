@@ -40,3 +40,8 @@ export function photoProblem(file: File): string | null {
   if (file.size === 0) return `“${file.name}” is empty.`;
   return null;
 }
+
+/** 1200×630 social-share image (WhatsApp, Facebook, X previews). */
+export function ogImageUrl(url: string) {
+  return url.replace(`/upload/${DELIVERY_TRANSFORM}/`, "/upload/c_fill,g_auto,w_1200,h_630,q_auto,f_jpg/");
+}
