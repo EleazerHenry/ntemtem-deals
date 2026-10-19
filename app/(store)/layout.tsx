@@ -8,7 +8,8 @@ import { getStoreCategories } from "@/lib/storefront";
 export const revalidate = 600;
 
 export default async function StoreLayout({ children }: { children: React.ReactNode }) {
-  const categories = await getStoreCategories();
+  // Only categories with something to buy appear in the header, menu and footer
+  const categories = (await getStoreCategories()).filter((c) => c.productCount > 0);
 
   return (
     <>

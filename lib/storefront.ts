@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 // Read-only queries for the customer-facing store. Only live products appear.
 
-const cardSelect = {
+export const cardSelect = {
   id: true,
   slug: true,
   name: true,
@@ -40,7 +40,7 @@ export type ProductCardData = {
   deliveryEstimate: string;
 };
 
-function toCard(p: CardRow): ProductCardData {
+export function toCard(p: CardRow): ProductCardData {
   const base = p.price.toNumber();
   const prices =
     p.hasVariants && p.variants.length

@@ -261,7 +261,7 @@ function Deals({ products, best }: { products: ProductCardData[]; best: number }
             </h2>
             <p className="text-muted-foreground">Same quality, lower prices. While they last.</p>
           </div>
-          <Link href="/shop?sort=deals" className="flex shrink-0 items-center gap-1 text-sm font-semibold hover:text-brand-700">
+          <Link href="/shop?sale=1&sort=discount" className="flex shrink-0 items-center gap-1 text-sm font-semibold hover:text-brand-700">
             See all deals <ArrowRight className="size-4" />
           </Link>
         </div>
