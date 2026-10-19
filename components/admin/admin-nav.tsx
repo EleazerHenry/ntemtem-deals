@@ -43,7 +43,7 @@ const groups: { title: string; items: NavItem[] }[] = [
     title: "Setup",
     items: [
       { label: "Delivery fees", href: "/admin/delivery", icon: Truck, soon: true },
-      { label: "Settings", href: "/admin/settings", icon: Settings, soon: true },
+      { label: "Settings", href: "/admin/settings", icon: Settings },
     ],
   },
 ];

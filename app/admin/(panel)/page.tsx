@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Check, Eye, EyeOff, Package, Star, Tags } from "lucide-react";
+import bcrypt from "bcryptjs";
+import { ArrowRight, Check, Eye, EyeOff, Package, ShieldAlert, Star, Tags } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { Button } from "@/components/ui/button";
 import { requireAdmin } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
+import { SEED_PASSWORD } from "@/lib/validations/account";
 
 export const metadata: Metadata = { title: "Overview" };
 
@@ -21,12 +23,14 @@ function greeting() {
 export default async function AdminOverviewPage() {
   const admin = await requireAdmin();
 
-  const [live, hidden, featured, categories] = await Promise.all([
+  const [live, hidden, featured, categories, user] = await Promise.all([
     prisma.product.count({ where: { isActive: true } }),
     prisma.product.count({ where: { isActive: false } }),
     prisma.product.count({ where: { isFeatured: true, isActive: true } }),
     prisma.category.count({ where: { isActive: true } }),
+    prisma.user.findUnique({ where: { id: admin.id }, select: { passwordHash: true } }),
   ]);
+  const usingStarterPassword = !!user?.passwordHash && (await bcrypt.compare(SEED_PASSWORD, user.passwordHash));
 
   const stats = [
     { label: "Live in your store", value: live, hint: "Customers can see and buy these", icon: Eye },
@@ -65,6 +69,20 @@ export default async function AdminOverviewPage() {
           </Button>
         }
       />
+
+      {usingStarterPassword && (
+        <Link
+          href="/admin/settings"
+          className="mb-6 flex items-center gap-3 rounded-2xl border border-ghana-gold bg-warning/20 px-4 py-3.5 text-sm transition-colors hover:bg-warning/30"
+        >
+          <ShieldAlert className="size-5 shrink-0" />
+          <span className="flex-1">
+            <strong className="font-semibold">Change your password.</strong> You&apos;re still using the starter password
+            from setup.
+          </span>
+          <ArrowRight className="size-4 shrink-0" />
+        </Link>
+      )}
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {stats.map(({ label, value, hint, icon: Icon }) => (
