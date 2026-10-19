@@ -42,10 +42,9 @@ async function availableSlug(base: string, excludeId: string) {
   return `${base}-${Date.now().toString(36)}`;
 }
 
-function revalidateProductPages(slug?: string) {
-  revalidatePath("/admin", "layout");
-  revalidatePath("/");
-  if (slug) revalidatePath(`/products/${slug}`);
+/** Admin changes show up everywhere: header nav, home, category and product pages. */
+function revalidateStore() {
+  revalidatePath("/", "layout");
 }
 
 /** Create (isNew) or update the product with this id. */
@@ -150,8 +149,7 @@ export async function saveProduct(
     const removed = existing?.images.filter((url) => !data.images.includes(url)) ?? [];
     if (removed.length) after(() => destroyProductPhotos(removed));
 
-    revalidateProductPages(data.slug);
-    if (existing && existing.slug !== data.slug) revalidatePath(`/products/${existing.slug}`);
+    revalidateStore();
     return { ok: true, ...product };
   } catch (error) {
     // Two saves racing for the same web address
@@ -178,9 +176,9 @@ export async function deleteProduct(id: string): Promise<DeleteProductResult> {
 
   try {
     // Order items keep their name/price snapshots; their productId becomes null.
-    const product = await prisma.product.delete({ where: { id }, select: { slug: true } });
+    await prisma.product.delete({ where: { id } });
     after(() => destroyProductFolder(id));
-    revalidateProductPages(product.slug);
+    revalidateStore();
     return { ok: true };
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
@@ -229,7 +227,7 @@ export async function createCategory(rawName: string): Promise<CreateCategoryRes
       data: { name, slug, displayOrder: (last._max.displayOrder ?? 0) + 1 },
       select: { id: true, name: true },
     });
-    revalidatePath("/admin", "layout");
+    revalidateStore();
     return { ok: true, category, existed: false };
   } catch (error) {
     console.error("createCategory failed", error);

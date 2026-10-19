@@ -22,10 +22,9 @@ import {
 // Existing categories use cuids; new ones get a UUID up front for their image folder.
 const CATEGORY_ID = /^[A-Za-z0-9-]{20,40}$/;
 
-function revalidateCategoryPages(...slugs: string[]) {
-  revalidatePath("/admin", "layout");
-  revalidatePath("/");
-  for (const slug of slugs) revalidatePath(`/categories/${slug}`);
+/** Admin changes show up everywhere: header nav, home, category and product pages. */
+function revalidateStore() {
+  revalidatePath("/", "layout");
 }
 
 async function availableSlug(base: string, excludeId: string) {
@@ -98,7 +97,7 @@ export async function saveCategory(
       after(() => destroyProductPhotos([old]));
     }
 
-    revalidateCategoryPages(data.slug, ...(existing && existing.slug !== data.slug ? [existing.slug] : []));
+    revalidateStore();
     return { ok: true, category };
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
@@ -127,7 +126,7 @@ export async function reorderCategories(orderedIds: string[]): Promise<ReorderRe
     await prisma.$transaction(
       orderedIds.map((id, index) => prisma.category.update({ where: { id }, data: { displayOrder: index + 1 } })),
     );
-    revalidateCategoryPages();
+    revalidateStore();
     return { ok: true };
   } catch (error) {
     console.error("reorderCategories failed", error);
@@ -166,7 +165,7 @@ export async function deleteCategory(id: string, moveTo?: string): Promise<Delet
       prisma.category.delete({ where: { id } }),
     ]);
     after(() => destroyCategoryFolder(id));
-    revalidateCategoryPages(category.slug);
+    revalidateStore();
     return { ok: true, moved: productCount > 0 ? moved.count : 0 };
   } catch (error) {
     // A product was added to it between the check and the delete
