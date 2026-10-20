@@ -146,17 +146,17 @@ function CartRow({
         {line.unavailable ? (
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs font-medium text-destructive">No longer available</p>
-            <button type="button" onClick={onRemove} className="text-xs font-semibold underline">
+            <button type="button" onClick={onRemove} className="-my-2 -mr-2 min-h-10 px-2 text-xs font-semibold underline">
               Remove
             </button>
           </div>
         ) : (
           <div className="flex items-center justify-between gap-2">
-            <div className="flex h-9 items-center rounded-lg border" role="group" aria-label={`Quantity of ${line.name}`}>
+            <div className="flex h-10 items-center rounded-lg border" role="group" aria-label={`Quantity of ${line.name}`}>
               <button
                 type="button"
                 onClick={() => (line.quantity <= 1 ? onRemove() : onQuantity(line.quantity - 1))}
-                className="grid h-full w-9 place-items-center rounded-l-lg hover:bg-muted"
+                className="grid h-full w-10 place-items-center rounded-l-lg hover:bg-muted"
                 aria-label={line.quantity <= 1 ? `Remove ${line.name}` : "One fewer"}
               >
                 {line.quantity <= 1 ? <Trash2 className="size-3.5" /> : <Minus className="size-3.5" />}
@@ -166,7 +166,7 @@ function CartRow({
                 type="button"
                 onClick={() => onQuantity(line.quantity + 1)}
                 disabled={line.quantity >= MAX_QTY}
-                className="grid h-full w-9 place-items-center rounded-r-lg hover:bg-muted disabled:opacity-40"
+                className="grid h-full w-10 place-items-center rounded-r-lg hover:bg-muted disabled:opacity-40"
                 aria-label="One more"
               >
                 <Plus className="size-3.5" />
@@ -174,7 +174,11 @@ function CartRow({
             </div>
             <div className="flex items-center gap-3">
               {line.quantity > 1 && <span className="numeric hidden text-xs text-muted-foreground min-[380px]:inline">{formatPrice(line.unitPrice)} each</span>}
-              <button type="button" onClick={onRemove} className="text-xs font-medium text-muted-foreground underline-offset-4 hover:text-destructive hover:underline">
+              <button
+                type="button"
+                onClick={onRemove}
+                className="-my-2 -mr-2 min-h-10 px-2 text-xs font-medium text-muted-foreground underline-offset-4 hover:text-destructive hover:underline"
+              >
                 Remove
               </button>
             </div>
