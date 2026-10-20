@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { MessageCircle, Truck } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
-import { CartButton } from "@/components/store/cart-button";
+import { CartDrawer } from "@/components/store/cart/cart-drawer";
 import { SearchBox } from "@/components/store/search-box";
 import { CategoryNav, MobileMenu } from "@/components/store/store-nav";
 import { site, whatsappLink } from "@/lib/site";
@@ -41,7 +41,7 @@ export function StoreHeader({ categories }: { categories: StoreCategory[] }) {
                 <MessageCircle className="size-[18px]" /> Chat to order
               </a>
             )}
-            <CartButton />
+            <CartDrawer />
           </div>
         </div>
         <div className="px-4 pb-3 md:hidden">

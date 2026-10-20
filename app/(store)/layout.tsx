@@ -1,3 +1,4 @@
+import { CartProvider } from "@/components/store/cart/cart-provider";
 import { StoreFooter } from "@/components/store/store-footer";
 import { StoreHeader } from "@/components/store/store-header";
 import { WhatsAppFloat } from "@/components/store/whatsapp-float";
@@ -13,11 +14,11 @@ export default async function StoreLayout({ children }: { children: React.ReactN
   const categories = (await getStoreCategories()).filter((c) => c.productCount > 0);
 
   return (
-    <>
+    <CartProvider>
       <StoreHeader categories={categories} />
       <main className="flex-1">{children}</main>
       <StoreFooter categories={categories} />
       <WhatsAppFloat href={whatsappLink("Hi Ntemtem Deals! I'd like to order.")} />
-    </>
+    </CartProvider>
   );
 }

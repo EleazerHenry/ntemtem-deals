@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { BadgeCheck, Clock, MessageCircle, Minus, PackageCheck, Plus, ShoppingBag, Smartphone, Truck } from "lucide-react";
-import { toast } from "sonner";
+import { useCart } from "@/components/store/cart/cart-provider";
 import { ProductGallery } from "@/components/store/product/product-gallery";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/format";
@@ -35,6 +35,8 @@ export function ProductView({
   const optionsRef = useRef<HTMLFieldSetElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
   const [showStickyBar, setShowStickyBar] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const cart = useCart();
 
   const selected = variants.find((v) => v.id === variantId) ?? null;
   const available = variants.filter((v) => v.isActive);
@@ -75,17 +77,16 @@ export function ProductView({
     if (v.imageIndex !== null) setPhoto(v.imageIndex);
   }
 
-  function addToCart() {
+  async function addToCart() {
     if (variants.length && !selected) {
       setNeedsOption(true);
       optionsRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
-    // Phase 3 wires the real cart; until then be honest about it
-    toast.info("Online checkout is almost ready.", {
-      description: whatsapp ? "You can order this right now on WhatsApp." : "Check back very soon to order this.",
-      action: whatsapp ? { label: "WhatsApp", onClick: () => window.open(orderLink(), "_blank") } : undefined,
-    });
+    setAdding(true);
+    const added = await cart.add(product.id, selected?.id ?? null, qty);
+    setAdding(false);
+    if (added) setQty(1);
   }
 
   function orderLink() {
@@ -218,8 +219,8 @@ export function ProductView({
                 <Plus className="size-4" />
               </button>
             </div>
-            <Button size="xl" className="h-14 flex-1 text-base" onClick={addToCart}>
-              <ShoppingBag data-icon="inline-start" /> {ctaLabel}
+            <Button size="xl" className="h-14 flex-1 text-base" onClick={addToCart} disabled={adding}>
+              <ShoppingBag data-icon="inline-start" /> {adding ? "Adding…" : ctaLabel}
             </Button>
           </div>
           {whatsapp && (
@@ -254,8 +255,8 @@ export function ProductView({
               {formatPrice(price)}
             </p>
           </div>
-          <Button size="lg" className="h-12 px-5" onClick={addToCart} tabIndex={showStickyBar ? 0 : -1}>
-            <ShoppingBag data-icon="inline-start" /> {ctaLabel}
+          <Button size="lg" className="h-12 px-5" onClick={addToCart} disabled={adding} tabIndex={showStickyBar ? 0 : -1}>
+            <ShoppingBag data-icon="inline-start" /> {adding ? "Adding…" : ctaLabel}
           </Button>
         </div>
       </div>
