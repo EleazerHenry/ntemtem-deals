@@ -1,19 +1,26 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { getServerSession } from "next-auth";
+import { CheckoutForm } from "@/components/store/checkout/checkout-form";
+import { authOptions } from "@/lib/auth";
+import { getDeliveryZones } from "@/lib/checkout";
+import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = { title: "Checkout", robots: { index: false } };
 
-// Placeholder — the checkout itself lands in Phase 3, Part 2.
-export default function CheckoutPage() {
+export default async function CheckoutPage() {
+  const [zones, session] = await Promise.all([getDeliveryZones(), getServerSession(authOptions)]);
+  const user = session?.user?.id
+    ? await prisma.user.findUnique({ where: { id: session.user.id }, select: { name: true, email: true, phone: true } })
+    : null;
+
   return (
-    <div className="mx-auto max-w-xl px-4 py-24 text-center">
-      <p className="eyebrow text-brand-700">Almost there</p>
-      <h1 className="mt-2 text-3xl font-bold">Checkout opens very soon</h1>
-      <p className="mt-2 text-muted-foreground">Your cart is saved — it&apos;ll be right here when checkout goes live.</p>
-      <Button asChild size="lg" variant="secondary" className="mt-6">
-        <Link href="/shop">Keep shopping</Link>
-      </Button>
+    <div className="mx-auto max-w-6xl px-4 pt-6 pb-16 sm:px-8 sm:pt-10">
+      <h1 className="mb-8 text-3xl font-bold sm:text-4xl">Checkout</h1>
+      <CheckoutForm
+        zones={zones}
+        signedIn={!!user}
+        prefill={{ fullName: user?.name ?? "", email: user?.email ?? "", phone: user?.phone ?? "" }}
+      />
     </div>
   );
 }

@@ -15,6 +15,8 @@ type CartContextValue = {
   add: (productId: string, variantId: string | null, quantity: number) => Promise<boolean>;
   setQuantity: (lineId: string, quantity: number) => void;
   remove: (lineId: string) => void;
+  /** Reload from the server (e.g. after checkout emptied it) */
+  refresh: () => void;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -193,6 +195,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         add,
         setQuantity: change,
         remove: (lineId) => change(lineId, 0),
+        refresh,
       }}
     >
       {children}

@@ -20,3 +20,9 @@ export function formatGHS(amount: number | string | { toString(): string }) {
 export function formatPrice(amount: number) {
   return Number.isInteger(amount) ? ghsTrim.format(amount) : ghs.format(amount);
 }
+
+/** "+233241234567" -> "+233 24 123 4567" (anything else is returned as-is). */
+export function formatPhone(phone: string | null | undefined) {
+  const m = phone?.match(/^\+233(\d{2})(\d{3})(\d{4})$/);
+  return m ? `+233 ${m[1]} ${m[2]} ${m[3]}` : (phone ?? "");
+}
