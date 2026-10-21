@@ -235,7 +235,7 @@ export function ProductView({
         <ul className="grid gap-3 border-t pt-6 text-sm sm:grid-cols-3">
           <Perk icon={Truck} title="Delivered to you" body={cities.join(", ")} />
           <Perk icon={Smartphone} title="MoMo or card" body="Pay securely at checkout" />
-          <Perk icon={BadgeCheck} title="Peace of mind" body="Refunds if something's wrong" />
+          <Perk icon={BadgeCheck} title="Peace of mind" body="Refunds if something's wrong" href="/policies/returns" />
         </ul>
       </div>
 
@@ -264,14 +264,36 @@ export function ProductView({
   );
 }
 
-function Perk({ icon: Icon, title, body }: { icon: React.ComponentType<{ className?: string }>; title: string; body: string }) {
+function Perk({
+  icon: Icon,
+  title,
+  body,
+  href,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  body: string;
+  /** Makes the line a link to its policy page */
+  href?: string;
+}) {
+  const text = (
+    <>
+      <span className="block font-medium">{title}</span>
+      <span className={cn("block text-xs text-muted-foreground", href && "underline decoration-border underline-offset-2 group-hover:decoration-brand-700")}>
+        {body}
+      </span>
+    </>
+  );
   return (
     <li className="flex gap-2.5">
       <Icon className="mt-0.5 size-4 shrink-0 text-brand-700" />
-      <span>
-        <span className="block font-medium">{title}</span>
-        <span className="block text-xs text-muted-foreground">{body}</span>
-      </span>
+      {href ? (
+        <Link href={href} className="group -my-1 py-1 hover:text-brand-700">
+          {text}
+        </Link>
+      ) : (
+        <span>{text}</span>
+      )}
     </li>
   );
 }
