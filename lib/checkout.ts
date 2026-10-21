@@ -39,7 +39,7 @@ export async function checkCoupon(rawCode: string, subtotal: number, db: Prisma.
     return { ok: false, error: `Spend GH₵${min.toLocaleString("en-GH")} or more to use “${code}” — add GH₵${round2(min - subtotal).toLocaleString("en-GH")} more.` };
   }
   const value = coupon.value.toNumber();
-  const discount = coupon.type === "PERCENTAGE" ? round2((subtotal * value) / 100) : Math.min(value, subtotal);
+  const discount = Math.min(subtotal, coupon.type === "PERCENTAGE" ? round2((subtotal * value) / 100) : value);
   const label = coupon.type === "PERCENTAGE" ? `${value}% off` : `GH₵${value.toLocaleString("en-GH")} off`;
   return { ok: true, id: coupon.id, code: coupon.code, discount, label, maxUses: coupon.maxUses };
 }

@@ -1,5 +1,6 @@
 import "server-only";
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 // Paystack: card + every Mobile Money network in one integration.
@@ -83,6 +84,26 @@ export function isValidWebhookSignature(rawBody: string, signature: string | nul
   return expected.length === given.length && timingSafeEqual(expected, given);
 }
 
+/**
+ * Each "Pay" press makes a new reference and we only keep the latest. If the
+ * customer then pays in an older Paystack tab, that money is real (Paystack just
+ * verified it) — so when it succeeded for the full order total and the order
+ * isn't paid yet, point the order's payment at that reference instead of
+ * dropping it as unknown.
+ */
+async function adoptEarlierAttempt<S extends Prisma.PaymentSelect>(tx: PaystackTransaction, select: S) {
+  const orderNumber = tx.reference.match(/^(NTD-\d+)-[0-9a-f]{8}$/)?.[1];
+  if (!orderNumber || tx.status !== "success" || tx.currency !== "GHS") return null;
+  const order = await prisma.order.findUnique({ where: { orderNumber }, select: { id: true, total: true, paymentStatus: true } });
+  if (!order || order.paymentStatus === "PAID" || tx.amount !== toPesewas(order.total.toNumber())) return null;
+  const moved = await prisma.payment.updateMany({
+    where: { orderId: order.id, status: { not: "SUCCESS" } },
+    data: { reference: tx.reference, amount: order.total, status: "PENDING" },
+  });
+  if (moved.count === 0) return null;
+  return prisma.payment.findUnique({ where: { reference: tx.reference }, select });
+}
+
 export type SettleResult =
   | { outcome: "paid" | "already-paid"; orderNumber: string; orderId: string }
   | { outcome: "failed" | "pending" | "mismatch"; orderNumber: string; orderId: string }
@@ -94,10 +115,9 @@ export type SettleResult =
  * successful call moves the order to CONFIRMED.
  */
 export async function settleTransaction(tx: PaystackTransaction): Promise<SettleResult> {
-  const payment = await prisma.payment.findUnique({
-    where: { reference: tx.reference },
-    select: { id: true, status: true, amount: true, order: { select: { id: true, orderNumber: true, status: true } } },
-  });
+  const select = { id: true, status: true, amount: true, order: { select: { id: true, orderNumber: true, status: true } } } as const;
+  let payment = await prisma.payment.findUnique({ where: { reference: tx.reference }, select });
+  if (!payment) payment = await adoptEarlierAttempt(tx, select);
   if (!payment) return { outcome: "unknown-reference" };
   const { order } = payment;
   const ref = { orderNumber: order.orderNumber, orderId: order.id };
@@ -148,6 +168,6 @@ export async function settleTransaction(tx: PaystackTransaction): Promise<Settle
       },
     });
     return true;
-  });
+  }, { timeout: 20_000, maxWait: 10_000 }); // same headroom as checkout: a slow moment mustn't drop a real payment
   return { outcome: won ? "paid" : "already-paid", ...ref };
 }
