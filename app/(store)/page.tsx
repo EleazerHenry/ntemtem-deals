@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, BadgeCheck, CreditCard, MapPin, MessageCircle, PackageSearch, Plane, Smartphone, Truck } from "lucide-react";
 import { ProductGrid } from "@/components/store/product-card";
+import { RecentlyViewed } from "@/components/store/recently-viewed";
 import { ProductImage } from "@/components/store/product-image";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/format";
@@ -48,6 +49,8 @@ export default async function HomePage() {
       ) : (
         <ComingSoon />
       )}
+
+      <RecentlyViewed className="mx-auto max-w-7xl px-4 sm:px-8" />
 
       {deals.length > 0 && <Deals products={fullRows(deals)} best={deals[0].percentOff} />}
 

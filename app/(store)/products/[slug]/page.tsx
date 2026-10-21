@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CreditCard, PackageSearch, Plane } from "lucide-react";
 import { ProductGrid } from "@/components/store/product-card";
+import { RecentlyViewed, RecordView } from "@/components/store/recently-viewed";
 import { ProductView } from "@/components/store/product/product-view";
 import { arrivalWindow } from "@/lib/delivery";
 import { ogImageUrl } from "@/lib/product-images";
@@ -109,6 +110,9 @@ export default async function ProductPage({ params }: Props) {
           <ProductGrid products={related} />
         </section>
       )}
+
+      <RecentlyViewed exclude={[product.slug, ...related.map((p) => p.slug)]} />
+      <RecordView slug={product.slug} />
     </div>
   );
 }

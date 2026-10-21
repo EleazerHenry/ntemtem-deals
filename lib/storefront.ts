@@ -122,6 +122,14 @@ export async function getDeals(limit = 8) {
     .slice(0, limit);
 }
 
+/** Live products for the given slugs, in the same order (unknown or hidden ones dropped). */
+export async function getProductsBySlugs(slugs: string[]) {
+  if (!slugs.length) return [];
+  const rows = await prisma.product.findMany({ where: { ...live, slug: { in: slugs } }, select: cardSelect });
+  const bySlug = new Map(rows.map((r) => [r.slug, toCard(r)]));
+  return slugs.flatMap((slug) => bySlug.get(slug) ?? []);
+}
+
 export const getLiveProductCount = cache(() => prisma.product.count({ where: live }));
 
 // ---- Product page ----
