@@ -10,7 +10,10 @@ export const site = {
     "Quality phone accessories, car accessories, home gadgets, fashion and electronics — sourced for you and delivered across Ghana in 10-12 days.",
   domain: "ntemtemdeals.com",
   deliveryDays: "10-12 days",
-  cities: ["Accra", "Kumasi", "Cape Coast", "Takoradi"],
+  /** Where we deliver. Everyone else picks Accra delivery and we help with onward transport. */
+  cities: ["Accra"],
+  outsideAccra:
+    "We deliver within Accra. Outside Accra? Choose Accra delivery — once your order lands we'll help you arrange onward transport to your region, paid separately. Message us on WhatsApp and we'll guide you.",
   /** International format without "+", e.g. 233241234567 */
   whatsapp: digits(process.env.NEXT_PUBLIC_WHATSAPP_NUMBER),
   email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || null,

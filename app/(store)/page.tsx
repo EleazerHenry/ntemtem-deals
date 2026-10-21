@@ -169,7 +169,7 @@ function TrustStrip() {
   const items = [
     { icon: Truck, title: `Delivered in ${site.deliveryDays}`, body: "Tracked from order to your door" },
     { icon: Smartphone, title: "MoMo or card", body: "MTN, Telecel, AirtelTigo & cards" },
-    { icon: MapPin, title: "4 cities", body: site.cities.join(", ") },
+    { icon: MapPin, title: "Delivery in Accra", body: "Elsewhere? We help with onward transport" },
     { icon: BadgeCheck, title: "Quality checked", body: "Refunds if something's wrong" },
   ];
   return (

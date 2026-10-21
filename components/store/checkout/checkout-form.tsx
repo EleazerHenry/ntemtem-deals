@@ -7,6 +7,7 @@ import { ChevronDown, ImageIcon, Loader2, Lock, MapPin, ShoppingBag, Store, Tag,
 import { toast } from "sonner";
 import { applyCoupon, placeOrder } from "@/app/(store)/checkout/actions";
 import { ArrivalNote } from "@/components/store/arrival-note";
+import { OutsideAccraNote } from "@/components/store/outside-accra-note";
 import { useCart } from "@/components/store/cart/cart-provider";
 import { ProductImage } from "@/components/store/product-image";
 import { Button } from "@/components/ui/button";
@@ -39,7 +40,8 @@ export function CheckoutForm({
     fullName: prefill.fullName,
     email: prefill.email,
     phone: prefill.phone,
-    city: prefill.city ?? "",
+    // One city (Accra) — nothing to choose
+    city: prefill.city || (zones.length === 1 ? zones[0].city : ""),
     method: "delivery" as "delivery" | "pickup",
     area: prefill.area ?? "",
     landmark: prefill.landmark ?? "",
@@ -250,7 +252,7 @@ export function CheckoutForm({
         <Section step="2" title="Delivery">
           <fieldset>
             <legend className="mb-3 text-sm font-medium">City</legend>
-            <div id="co-city" tabIndex={-1} role="radiogroup" aria-label="City" className="grid grid-cols-2 gap-3 outline-none">
+            <div id="co-city" tabIndex={-1} role="radiogroup" aria-label="City" className={cn("grid gap-3 outline-none", zones.length > 1 && "grid-cols-2")}>
               {zones.map((z) => (
                 <button
                   key={z.city}
@@ -274,6 +276,7 @@ export function CheckoutForm({
             </div>
             {errors.city && <p className="mt-2 text-sm text-destructive">{errors.city}</p>}
           </fieldset>
+          <OutsideAccraNote />
 
           {zone?.isPickup && (
             <div role="radiogroup" aria-label="Delivery or pickup" className="grid grid-cols-2 gap-3">
@@ -317,7 +320,7 @@ export function CheckoutForm({
                 onChange={(v) => set({ area: v })}
                 error={errors.area}
                 autoComplete="address-level3"
-                placeholder={form.city === "Kumasi" ? "e.g. Ahodwo" : "e.g. East Legon"}
+                placeholder="e.g. East Legon"
               />
               <TextField
                 id="co-landmark"

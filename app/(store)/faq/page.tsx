@@ -70,12 +70,18 @@ export default async function FaqPage() {
       ),
     },
     {
-      q: "Which cities do you deliver to?",
+      q: "Where do you deliver?",
       a: (
-        <p>
-          {listCities(cities)}. Delivery fees depend on your city and are shown clearly at checkout before you pay.
-          {pickup.length > 0 && ` Free pickup is available in ${listCities(pickup)} — choose it at checkout.`}
-        </p>
+        <>
+          <p>
+            Within {listCities(cities)}. The delivery fee is shown clearly at checkout before you pay.
+            {pickup.length > 0 && ` Free pickup is available in ${listCities(pickup)} — choose it at checkout.`}
+          </p>
+          <p>
+            Outside Accra? Choose Accra delivery — once your order lands we&apos;ll help you arrange onward transport to your region, paid separately.
+            Message us on WhatsApp and we&apos;ll guide you.
+          </p>
+        </>
       ),
     },
     {

@@ -46,13 +46,10 @@ async function main() {
   }
   console.log(`  ✓ ${categories.length} categories`);
 
-  // ---- Delivery zones (PLACEHOLDER fees — client to confirm) ----
-  const zones = [
-    { city: "Accra", deliveryFee: 30, estimatedDays: "1-2 days", isPickup: false },
-    { city: "Kumasi", deliveryFee: 35, estimatedDays: "2-3 days", isPickup: false },
-    { city: "Cape Coast", deliveryFee: 20, estimatedDays: "1-2 days", isPickup: true },
-    { city: "Takoradi", deliveryFee: 35, estimatedDays: "2-3 days", isPickup: false },
-  ];
+  // ---- Delivery zones ----
+  // Accra only (client confirmed). Outside Accra, customers choose Accra delivery
+  // and we help arrange onward transport, paid separately.
+  const zones = [{ city: "Accra", deliveryFee: 30, estimatedDays: "1-2 days", isPickup: false }];
   for (const z of zones) {
     await prisma.deliveryZone.upsert({
       where: { city: z.city },
@@ -60,7 +57,7 @@ async function main() {
       create: z,
     });
   }
-  console.log(`  ✓ ${zones.length} delivery zones (PLACEHOLDER fees)`);
+  console.log(`  ✓ ${zones.length} delivery zone (Accra, GH₵30 — editable in admin)`);
 
   // ---- A sample coupon (client can create more) ----
   await prisma.coupon.upsert({

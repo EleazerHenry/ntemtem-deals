@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ContentPage } from "@/components/store/content-page";
+import { OutsideAccraNote } from "@/components/store/outside-accra-note";
 import { getDeliveryZones } from "@/lib/checkout";
 import { deliveryTimeSentence } from "@/lib/content";
 
@@ -64,12 +65,15 @@ export default async function DeliveryPage() {
 
         <h2>Where we deliver, and fees</h2>
         <p>
-          We deliver to <strong>{listCities(zones.map((z) => z.city))}.</strong> The delivery fee for your city is shown at checkout before you pay —
-          no hidden charges.
+          We deliver within <strong>{listCities(zones.map((z) => z.city))}.</strong> The delivery fee is shown at checkout before you pay — no hidden
+          charges.
         </p>
         {pickup.length > 0 && (
           <p>Free pickup is available in {listCities(pickup)} — choose it at checkout to skip the delivery fee.</p>
         )}
+      </div>
+      <OutsideAccraNote className="mt-5 max-w-[68ch]" />
+      <div className="content-prose">
 
         <h2>Tracking your delivery</h2>
         <p>
