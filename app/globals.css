@@ -230,3 +230,36 @@
     cursor: pointer;
   }
 }
+
+/* Long-form copy on the content pages (About, FAQ, policies) */
+@layer components {
+  .content-prose {
+    @apply max-w-[68ch] text-[1.0625rem] leading-relaxed text-foreground/85;
+  }
+  .content-prose > * + * {
+    @apply mt-4;
+  }
+  .content-prose h2 {
+    @apply mt-12 scroll-mt-28 text-2xl font-semibold text-foreground sm:text-[1.75rem];
+  }
+  .content-prose h3 {
+    @apply mt-8 font-sans text-lg font-semibold tracking-normal text-foreground;
+  }
+  .content-prose h2 + *,
+  .content-prose h3 + * {
+    @apply mt-2.5;
+  }
+  .content-prose strong {
+    @apply font-semibold text-foreground;
+  }
+  .content-prose a {
+    @apply font-medium text-brand-700 underline decoration-brand-300 underline-offset-4 hover:decoration-brand-700;
+  }
+  .content-prose ul {
+    @apply space-y-2 pl-5;
+    list-style: disc;
+  }
+  .content-prose ul li::marker {
+    color: var(--color-brand-500);
+  }
+}
