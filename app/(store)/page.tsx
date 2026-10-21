@@ -259,7 +259,7 @@ function Deals({ products, best }: { products: ProductCardData[]; best: number }
             <h2 className="text-3xl font-semibold sm:text-4xl">
               Save big — <span className="text-ghana-red">up to {best}% off</span>
             </h2>
-            <p className="text-muted-foreground">Same quality, lower prices. While they last.</p>
+            <p className="text-muted-foreground">Real price drops on things people love.</p>
           </div>
           <Link href="/shop?sale=1&sort=discount" className="flex shrink-0 items-center gap-1 text-sm font-semibold hover:text-brand-700">
             See all deals <ArrowRight className="size-4" />

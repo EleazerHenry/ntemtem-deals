@@ -64,6 +64,11 @@ export function CartDrawer() {
                 <span className="font-medium">Subtotal</span>
                 <span className="numeric font-heading text-2xl font-bold">{formatPrice(cart!.subtotal)}</span>
               </div>
+              {cart!.savings > 0 && (
+                <p className="-mt-2 text-sm font-semibold text-success">
+                  You&apos;re saving <span className="numeric">{formatPrice(cart!.savings)}</span>
+                </p>
+              )}
               <p className="-mt-2 text-sm text-muted-foreground">Delivery fee and any discount code are added at checkout.</p>
               {cart!.deliveryEstimate && <ArrivalNote estimate={cart!.deliveryEstimate} />}
               {count > 0 ? (
@@ -142,7 +147,14 @@ function CartRow({
             </Link>
             {line.variantName && <p className="text-xs text-muted-foreground">{line.variantName}</p>}
           </div>
-          {!line.unavailable && <p className="numeric shrink-0 text-sm font-semibold">{formatPrice(line.lineTotal)}</p>}
+          {!line.unavailable && (
+            <div className="shrink-0 text-right">
+              <p className="numeric text-sm font-semibold">{formatPrice(line.lineTotal)}</p>
+              {line.compareAtUnit && (
+                <p className="numeric text-xs text-muted-foreground line-through">{formatPrice(line.compareAtUnit * line.quantity)}</p>
+              )}
+            </div>
+          )}
         </div>
 
         {line.unavailable ? (

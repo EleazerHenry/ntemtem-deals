@@ -181,7 +181,12 @@ export function CheckoutForm({
             <ShoppingBag className="size-4" /> {summaryOpen ? "Hide" : "Show"} order summary
             <ChevronDown className={cn("size-4 transition-transform", summaryOpen && "rotate-180")} />
           </span>
-          <span className="numeric font-heading text-lg font-bold">{cart ? formatPrice(total) : "…"}</span>
+          <span className="text-right leading-tight">
+            <span className="numeric block font-heading text-lg font-bold">{cart ? formatPrice(total) : "…"}</span>
+            {cart && cart.savings + (applied?.discount ?? 0) > 0 && (
+              <span className="numeric block text-xs font-semibold text-success">Saving {formatPrice(cart.savings + (applied?.discount ?? 0))}</span>
+            )}
+          </span>
         </button>
         {summaryOpen && <div className="pb-5">{summary}</div>}
       </div>
@@ -448,7 +453,12 @@ function Summary({
               {l.variantName && <p className="text-xs text-muted-foreground">{l.variantName}</p>}
               {l.unavailable && <p className="text-xs text-destructive">No longer available</p>}
             </div>
-            <p className="numeric shrink-0 text-sm font-medium">{formatPrice(l.lineTotal)}</p>
+            <div className="shrink-0 text-right">
+              <p className="numeric text-sm font-medium">{formatPrice(l.lineTotal)}</p>
+              {l.compareAtUnit && !l.unavailable && (
+                <p className="numeric text-xs text-muted-foreground line-through">{formatPrice(l.compareAtUnit * l.quantity)}</p>
+              )}
+            </div>
           </li>
         ))}
       </ul>
@@ -504,6 +514,11 @@ function Summary({
           <dd className="numeric font-heading text-2xl font-bold">{formatPrice(total)}</dd>
         </div>
       </dl>
+      {cart.savings + (applied?.discount ?? 0) > 0 && (
+        <p className="-mt-3 text-right text-sm font-semibold text-success">
+          You&apos;re saving <span className="numeric">{formatPrice(cart.savings + (applied?.discount ?? 0))}</span> on this order
+        </p>
+      )}
       {cart.deliveryEstimate && <ArrivalNote estimate={cart.deliveryEstimate} pickupCity={method === "pickup" ? zone?.city : undefined} />}
     </div>
   );
