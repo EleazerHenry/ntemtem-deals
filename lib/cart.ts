@@ -19,15 +19,27 @@ export type CartLine = {
   variantName: string | null;
   image: string | null;
   unitPrice: number;
+  /** The real "was" price per unit when on sale, else null */
+  compareAtUnit: number | null;
+  /** e.g. "10-12 days" */
+  deliveryEstimate: string;
   quantity: number;
   lineTotal: number;
   /** Set when the product/option was hidden since it was added — excluded from the subtotal */
   unavailable: boolean;
 };
 
-export type CartView = { lines: CartLine[]; count: number; subtotal: number };
+export type CartView = {
+  lines: CartLine[];
+  count: number;
+  subtotal: number;
+  /** Total saved against compare-at prices */
+  savings: number;
+  /** The longest delivery time in the cart, e.g. "10-12 days" — null when empty */
+  deliveryEstimate: string | null;
+};
 
-export const EMPTY_CART: CartView = { lines: [], count: 0, subtotal: 0 };
+export const EMPTY_CART: CartView = { lines: [], count: 0, subtotal: 0, savings: 0, deliveryEstimate: null };
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -109,14 +121,20 @@ export async function loadCartView(cartId: string): Promise<CartView> {
       quantity: true,
       productId: true,
       variantId: true,
-      product: { select: { slug: true, name: true, images: true, price: true, isActive: true, hasVariants: true } },
+      product: {
+        select: { slug: true, name: true, images: true, price: true, compareAtPrice: true, deliveryEstimate: true, isActive: true, hasVariants: true },
+      },
       variant: { select: { name: true, priceAdjustment: true, isActive: true, imageUrl: true } },
     },
   });
 
   const lines = items.map((item): CartLine => {
     const { product, variant } = item;
-    const unitPrice = round2(product.price.toNumber() + (variant?.priceAdjustment.toNumber() ?? 0));
+    const adjustment = variant?.priceAdjustment.toNumber() ?? 0;
+    const unitPrice = round2(product.price.toNumber() + adjustment);
+    // Same rule as the product page: on sale only when compare-at beats the base price
+    const was = product.compareAtPrice?.toNumber() ?? null;
+    const compareAtUnit = was !== null && was > product.price.toNumber() ? round2(was + adjustment) : null;
     const unavailable =
       !product.isActive || (product.hasVariants ? !variant || !variant.isActive : item.variantId !== null);
     return {
@@ -128,6 +146,8 @@ export async function loadCartView(cartId: string): Promise<CartView> {
       variantName: variant?.name ?? null,
       image: variant?.imageUrl ?? product.images[0] ?? null,
       unitPrice,
+      compareAtUnit,
+      deliveryEstimate: product.deliveryEstimate,
       quantity: item.quantity,
       lineTotal: round2(unitPrice * item.quantity),
       unavailable,
@@ -139,7 +159,15 @@ export async function loadCartView(cartId: string): Promise<CartView> {
     lines,
     count: ok.reduce((n, l) => n + l.quantity, 0),
     subtotal: round2(ok.reduce((sum, l) => sum + l.lineTotal, 0)),
+    savings: round2(ok.reduce((sum, l) => sum + (l.compareAtUnit ? (l.compareAtUnit - l.unitPrice) * l.quantity : 0), 0)),
+    deliveryEstimate: longestEstimate(ok.map((l) => l.deliveryEstimate)),
   };
+}
+
+/** The estimate with the latest upper bound — "10-12 days" beats "7-10 days". */
+function longestEstimate(estimates: string[]) {
+  const upper = (e: string) => Math.max(...(e.match(/d+/g)?.map(Number) ?? [0]));
+  return estimates.reduce<string | null>((best, e) => (best === null || upper(e) > upper(best) ? e : best), null);
 }
 
 export type AddResult = { ok: true; cart: CartView; lineId: string; capped: boolean } | { ok: false; error: string };

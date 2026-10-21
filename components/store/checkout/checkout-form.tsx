@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ChevronDown, ImageIcon, Loader2, Lock, MapPin, ShoppingBag, Store, Tag, Truck, X } from "lucide-react";
 import { toast } from "sonner";
 import { applyCoupon, placeOrder } from "@/app/(store)/checkout/actions";
+import { ArrivalNote } from "@/components/store/arrival-note";
 import { useCart } from "@/components/store/cart/cart-provider";
 import { ProductImage } from "@/components/store/product-image";
 import { Button } from "@/components/ui/button";
@@ -300,10 +301,8 @@ export function CheckoutForm({
               />
             </div>
           )}
-          {zone && (
-            <p className="text-sm text-muted-foreground">
-              Your order ships from China in about 10-12 days. Once it reaches Ghana, {form.method === "pickup" ? "it's ready for pickup" : `delivery in ${zone.city} takes ${zone.estimatedDays}`}.
-            </p>
+          {zone && cart?.deliveryEstimate && (
+            <ArrivalNote estimate={cart.deliveryEstimate} pickupCity={form.method === "pickup" ? zone.city : undefined} />
           )}
         </Section>
 
@@ -505,6 +504,7 @@ function Summary({
           <dd className="numeric font-heading text-2xl font-bold">{formatPrice(total)}</dd>
         </div>
       </dl>
+      {cart.deliveryEstimate && <ArrivalNote estimate={cart.deliveryEstimate} pickupCity={method === "pickup" ? zone?.city : undefined} />}
     </div>
   );
 }

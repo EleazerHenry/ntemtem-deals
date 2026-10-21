@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight, ImageIcon, Lock, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { ArrivalNote } from "@/components/store/arrival-note";
 import { useCart } from "@/components/store/cart/cart-provider";
 import { ProductImage } from "@/components/store/product-image";
 import { Button } from "@/components/ui/button";
@@ -64,6 +65,7 @@ export function CartDrawer() {
                 <span className="numeric font-heading text-2xl font-bold">{formatPrice(cart!.subtotal)}</span>
               </div>
               <p className="-mt-2 text-sm text-muted-foreground">Delivery fee and any discount code are added at checkout.</p>
+              {cart!.deliveryEstimate && <ArrivalNote estimate={cart!.deliveryEstimate} />}
               {count > 0 ? (
                 <SheetClose asChild>
                   <Button asChild size="xl" className="w-full">

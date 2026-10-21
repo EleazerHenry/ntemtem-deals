@@ -70,6 +70,9 @@ function withLines(cart: CartView, lines: CartView["lines"]): CartView {
     lines,
     count: ok.reduce((n, l) => n + l.quantity, 0),
     subtotal: round2(ok.reduce((s, l) => s + l.lineTotal, 0)),
+    savings: round2(ok.reduce((s, l) => s + (l.compareAtUnit ? (l.compareAtUnit - l.unitPrice) * l.quantity : 0), 0)),
+    // The server reply that follows settles this if a removed line changed it
+    deliveryEstimate: ok.length ? cart.deliveryEstimate : null,
   };
 }
 

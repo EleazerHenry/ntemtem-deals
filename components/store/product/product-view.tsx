@@ -138,7 +138,7 @@ export function ProductView({
           <div className="text-sm">
             <p className="font-semibold">
               {product.stockType === "PREORDER"
-                ? `Pre-order · Ships in ${product.deliveryEstimate} from China`
+                ? `Pre-order · Delivered in ${product.deliveryEstimate}`
                 : `In stock in Ghana · Delivered in ${product.deliveryEstimate}`}
             </p>
             {arrival && (
