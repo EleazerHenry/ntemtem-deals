@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import bcrypt from "bcryptjs";
-import { ArrowRight, Check, Eye, EyeOff, Package, ShieldAlert, Star, Tags } from "lucide-react";
+import { ArrowRight, Check, Eye, EyeOff, Package, ShieldAlert, ShoppingBag, Star, Tags } from "lucide-react";
 import { PageHeader } from "@/components/admin/page-header";
 import { Button } from "@/components/ui/button";
 import { requireAdmin } from "@/lib/dal";
@@ -23,12 +23,13 @@ function greeting() {
 export default async function AdminOverviewPage() {
   const admin = await requireAdmin();
 
-  const [live, hidden, featured, categories, user] = await Promise.all([
+  const [live, hidden, featured, categories, user, toSource] = await Promise.all([
     prisma.product.count({ where: { isActive: true } }),
     prisma.product.count({ where: { isActive: false } }),
     prisma.product.count({ where: { isFeatured: true, isActive: true } }),
     prisma.category.count({ where: { isActive: true } }),
     prisma.user.findUnique({ where: { id: admin.id }, select: { passwordHash: true } }),
+    prisma.order.count({ where: { status: "CONFIRMED" } }),
   ]);
   const usingStarterPassword = !!user?.passwordHash && (await bcrypt.compare(SEED_PASSWORD, user.passwordHash));
 
@@ -79,6 +80,19 @@ export default async function AdminOverviewPage() {
           <span className="flex-1">
             <strong className="font-semibold">Change your password.</strong> You&apos;re still using the starter password
             from setup.
+          </span>
+          <ArrowRight className="size-4 shrink-0" />
+        </Link>
+      )}
+
+      {toSource > 0 && (
+        <Link
+          href="/admin/orders?status=CONFIRMED"
+          className="mb-6 flex items-center gap-3 rounded-2xl bg-brand-500 px-4 py-4 text-ink shadow-glow transition-transform hover:-translate-y-0.5"
+        >
+          <ShoppingBag className="size-5 shrink-0" />
+          <span className="flex-1 font-semibold">
+            {toSource === 1 ? "1 paid order is waiting to be sourced" : `${toSource} paid orders are waiting to be sourced`}
           </span>
           <ArrowRight className="size-4 shrink-0" />
         </Link>

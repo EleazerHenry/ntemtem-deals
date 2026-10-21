@@ -35,7 +35,7 @@ const groups: { title: string; items: NavItem[] }[] = [
   {
     title: "Sales",
     items: [
-      { label: "Orders", href: "/admin/orders", icon: ShoppingBag, soon: true },
+      { label: "Orders", href: "/admin/orders", icon: ShoppingBag },
       { label: "Discount codes", href: "/admin/coupons", icon: TicketPercent, soon: true },
     ],
   },
