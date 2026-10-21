@@ -4,17 +4,20 @@ import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { CheckCircle2, CreditCard, MapPin, Package, Plane, Truck, Home, CircleDot } from "lucide-react";
 import { CopyButton } from "@/components/store/checkout/copy-button";
+import { PayButton } from "@/components/store/checkout/pay-button";
 import { SaveAccountCard } from "@/components/store/checkout/save-account-card";
 import { Button } from "@/components/ui/button";
 import { authOptions } from "@/lib/auth";
 import { isValidOrderKey, orderKey } from "@/lib/checkout";
+import { paystackSecret } from "@/lib/paystack";
+import { whatsappLink } from "@/lib/site";
 import { formatPhone, formatPrice } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Your order", robots: { index: false, follow: false } };
 
-type Props = { params: Promise<{ number: string }>; searchParams: Promise<{ key?: string }> };
+type Props = { params: Promise<{ number: string }>; searchParams: Promise<{ key?: string; payment?: string }> };
 
 const STEPS = [
   { status: "PENDING", label: "Order placed", icon: CircleDot },
@@ -26,7 +29,7 @@ const STEPS = [
 ] as const;
 
 export default async function OrderPage({ params, searchParams }: Props) {
-  const [{ number }, { key }, session] = await Promise.all([params, searchParams, getServerSession(authOptions)]);
+  const [{ number }, { key, payment }, session] = await Promise.all([params, searchParams, getServerSession(authOptions)]);
   const order = await prisma.order.findUnique({
     where: { orderNumber: number },
     include: { items: true, coupon: { select: { code: true } } },
@@ -41,6 +44,8 @@ export default async function OrderPage({ params, searchParams }: Props) {
   const firstName = order.guestName?.split(/\s+/)[0] ?? "there";
   const stepIndex = STEPS.findIndex((s) => s.status === order.status);
   const pickup = order.deliveryArea === "Free pickup";
+  const paid = order.paymentStatus === "PAID";
+  const whatsapp = whatsappLink(`Hi Ntemtem Deals! I'd like to pay for order ${order.orderNumber}.`);
 
   return (
     <div className="mx-auto max-w-5xl px-4 pt-8 pb-16 sm:px-8 sm:pt-12">
@@ -48,8 +53,10 @@ export default async function OrderPage({ params, searchParams }: Props) {
         <span className="mx-auto grid size-16 place-items-center rounded-full bg-success/10 text-success">
           <CheckCircle2 className="size-9" />
         </span>
-        <h1 className="mt-5 text-3xl font-bold sm:text-4xl">Thank you, {firstName}!</h1>
-        <p className="mt-2 text-muted-foreground">Your order is in. Complete payment so we can start sourcing it.</p>
+        <h1 className="mt-5 text-3xl font-bold sm:text-4xl">{paid ? `Payment received — thank you, ${firstName}!` : `Thank you, ${firstName}!`}</h1>
+        <p className="mt-2 text-muted-foreground">
+          {paid ? "We're getting your order ready to source. We'll keep you posted at every step." : "Your order is in. Complete payment so we can start sourcing it."}
+        </p>
         <div className="mt-4 inline-flex items-center gap-2 rounded-full border bg-card py-1.5 pr-1.5 pl-4 text-sm">
           Order <span className="numeric font-semibold">{order.orderNumber}</span>
           <CopyButton text={order.orderNumber} />
@@ -58,19 +65,34 @@ export default async function OrderPage({ params, searchParams }: Props) {
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-8">
-          {order.paymentStatus === "UNPAID" && (
-            <section className="rounded-3xl bg-ink p-6 text-paper sm:p-8">
-              <p className="eyebrow text-brand-400">Next step</p>
-              <h2 className="mt-1.5 text-2xl font-semibold">Pay {formatPrice(order.total.toNumber())}</h2>
-              <p className="mt-1.5 text-sm text-paper/70">Mobile Money (MTN, Telecel, AirtelTigo) or card, through Paystack.</p>
-              {/* Phase 4 wires Paystack here */}
-              <Button size="xl" className="mt-6 w-full sm:w-auto" disabled>
-                <CreditCard data-icon="inline-start" /> Proceed to payment
-              </Button>
-              <p className="mt-3 text-sm text-paper/60">
-                Online payment is being switched on — you&apos;ll be able to pay right here very soon. Your order is saved.
-              </p>
+          {payment === "failed" && !paid && (
+            <p role="alert" className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              Your payment didn&apos;t go through and you haven&apos;t been charged. You can try again below — with another number or card if you like.
+            </p>
+          )}
+          {payment === "pending" && !paid && (
+            <p role="status" className="rounded-2xl bg-warning/25 px-4 py-3 text-sm">
+              We&apos;re confirming your payment with Paystack. If you approved it on your phone, this page will show it shortly — refresh in a minute.
+            </p>
+          )}
+
+          {paid ? (
+            <section className="flex gap-4 rounded-3xl bg-success/10 p-6 sm:p-8">
+              <CheckCircle2 className="size-7 shrink-0 text-success" />
+              <div>
+                <h2 className="text-xl font-semibold text-success">Paid {formatPrice(order.total.toNumber())}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">A receipt is on its way to {order.guestEmail}. Next, we source your items from our suppliers.</p>
+              </div>
             </section>
+          ) : (
+            order.status !== "CANCELLED" && (
+              <section className="rounded-3xl bg-ink p-6 text-paper sm:p-8">
+                <p className="eyebrow text-brand-400">Next step</p>
+                <h2 className="mt-1.5 text-2xl font-semibold">Pay {formatPrice(order.total.toNumber())}</h2>
+                <p className="mt-1.5 text-sm text-paper/70">Mobile Money (MTN, Telecel, AirtelTigo) or card, securely through Paystack.</p>
+                <PayButton orderNumber={order.orderNumber} orderKey={key} enabled={!!paystackSecret()} whatsapp={whatsapp} retry={payment === "failed"} />
+              </section>
+            )
           )}
 
           <section>

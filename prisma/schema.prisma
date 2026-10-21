@@ -271,7 +271,7 @@ model Payment {
   orderId   String        @unique
   reference String        @unique // Paystack transaction reference
   amount    Decimal       @db.Decimal(10, 2)
-  method    PaymentMethod
+  method    PaymentMethod? // known once Paystack reports how they paid (card / mobile money)
   status    PaymentTxnStatus @default(PENDING)
   paidAt    DateTime?
   createdAt DateTime      @default(now())

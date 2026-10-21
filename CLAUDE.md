@@ -83,6 +83,17 @@ Flow: /api/payments/initialize -> Paystack checkout -> callback ->
 verify against Paystack API -> mark order CONFIRMED + payment SUCCESS.
 Test card: 4084 0840 8408 4081. Graceful fallback when keys missing.
 
+Setup when the client's keys arrive (lib/paystack.ts, app/api/payments/*):
+- PAYSTACK_SECRET_KEY (sk_test_/sk_live_ + 40 chars) and
+  NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY in .env, .env.local AND Vercel, then redeploy.
+  Anything shorter (a placeholder) counts as "not configured".
+- Paystack dashboard -> Settings -> API Keys & Webhooks -> Webhook URL:
+  https://<live domain>/api/payments/webhook  (settles payments even if the
+  customer closes the tab; signed HMAC-SHA512, re-verified with Paystack).
+- Every payment is re-verified server-side (amount in pesewas + GHS) and
+  settling is idempotent (callback and webhook can both arrive).
+- Never send the LIVE secret key over chat/email — paste it into Vercel.
+
 ## The two sides of the product
 
 1. STOREFRONT (customers) — premium, Shopify-level:
