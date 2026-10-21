@@ -368,6 +368,13 @@ export function CheckoutForm({
               ? "Mobile Money or card, on Paystack's secure page — then you come straight back."
               : "We'll save your order and contact you about paying."}
           </p>
+          <p className="text-center text-xs text-muted-foreground">
+            How we use and protect your details:{" "}
+            {/* New tab, so the filled-in form isn't lost */}
+            <Link href="/policies/privacy" target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-foreground">
+              Privacy Policy
+            </Link>
+          </p>
         </div>
       </div>
 

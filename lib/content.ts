@@ -1,4 +1,4 @@
-// Answers the content pages (About, Contact, FAQ, Delivery, Returns, Terms) are
+// Answers the content pages (About, Contact, FAQ, Delivery, Returns, Terms, Privacy) are
 // waiting on from the client. Each one is marked CLIENT TO CONFIRM — change the
 // value here and every page that uses it updates. Customers never see brackets:
 // unconfirmed values below are sensible defaults, and `null` hides the line.
@@ -32,6 +32,24 @@ export const content = {
 
   /** Set when the Terms are published or changed. */
   termsUpdated: "21 October 2026",
+
+  /**
+   * CLIENT TO CONFIRM: registered business name — the "data controller" on the
+   * Privacy Policy. `null` shows "Ntemtem Deals".
+   */
+  legalName: null as string | null,
+
+  /** CLIENT TO CONFIRM: business address for the Privacy Policy, e.g. "Oxford Street, Osu, Accra". */
+  address: null as string | null,
+
+  /** CLIENT TO CONFIRM: how long order records are kept (legal/tax). */
+  recordsKept: "up to 6 years",
+
+  /** CLIENT TO CONFIRM if analytics are ever added — then also add a consent notice. */
+  usesAnalytics: false,
+
+  /** Set when the Privacy Policy is published or changed. */
+  privacyUpdated: "21 October 2026",
 } as const;
 
 /** The delivery promise in a sentence, worded for whichever answer the client gives. */

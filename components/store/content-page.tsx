@@ -9,6 +9,7 @@ const PAGES = [
   { label: "Delivery", href: "/policies/delivery" },
   { label: "Returns & refunds", href: "/policies/returns" },
   { label: "Terms", href: "/policies/terms" },
+  { label: "Privacy", href: "/policies/privacy" },
   { label: "Track an order", href: "/track" },
 ];
 

@@ -23,6 +23,7 @@ export const site = {
     { label: "Delivery", href: "/policies/delivery" },
     { label: "Returns & refunds", href: "/policies/returns" },
     { label: "Terms", href: "/policies/terms" },
+    { label: "Privacy", href: "/policies/privacy" },
   ],
   help: [
     { label: "Track an order", href: "/track" },
