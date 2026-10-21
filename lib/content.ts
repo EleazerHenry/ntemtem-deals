@@ -2,9 +2,17 @@
 // waiting on from the client. Each one is marked CLIENT TO CONFIRM — change the
 // value here and every page that uses it updates. Customers never see brackets:
 // unconfirmed values below are sensible defaults, and `null` hides the line.
-// Contact details (WhatsApp, email, socials) live in lib/site.ts, from env.
+// lib/site.ts reads the WhatsApp number and email from here (env can override).
 
 export const content = {
+  /** Client confirmed. The shop's WhatsApp — shown on Contact, the green button and "order on WhatsApp" links. */
+  whatsapp: "+86 19835265530",
+
+  /** Client confirmed. Support email. */
+  email: "Ntemtemdeals@gmail.com",
+
+  /** Social links stay off until the client opens the accounts (lib/site.ts, from env). */
+
   /** Client confirmed: say we're the team behind Osika Express. */
   mentionOsika: true,
 
@@ -27,10 +35,10 @@ export const content = {
   termsUpdated: "21 October 2026",
 
   /**
-   * CLIENT TO CONFIRM: registered business name — the "data controller" on the
-   * Privacy Policy. `null` shows "Ntemtem Deals".
+   * Business name — the "data controller" on the Privacy Policy. Client: "Ntemtem
+   * Deals" for now; update if the business is registered under another name.
    */
-  legalName: null as string | null,
+  legalName: "Ntemtem Deals" as string | null,
 
   /** CLIENT TO CONFIRM: business address for the Privacy Policy, e.g. "Oxford Street, Osu, Accra". */
   address: null as string | null,

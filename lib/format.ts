@@ -24,5 +24,8 @@ export function formatPrice(amount: number) {
 /** "+233241234567" -> "+233 24 123 4567" (anything else is returned as-is). */
 export function formatPhone(phone: string | null | undefined) {
   const m = phone?.match(/^\+233(\d{2})(\d{3})(\d{4})$/);
-  return m ? `+233 ${m[1]} ${m[2]} ${m[3]}` : (phone ?? "");
+  if (m) return `+233 ${m[1]} ${m[2]} ${m[3]}`;
+  // China mobile (the shop's WhatsApp): +86 198 3526 5530
+  const cn = phone?.replace(/\s/g, "").match(/^\+86(1\d{2})(\d{4})(\d{4})$/);
+  return cn ? `+86 ${cn[1]} ${cn[2]} ${cn[3]}` : (phone ?? "");
 }

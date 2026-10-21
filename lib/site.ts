@@ -1,5 +1,7 @@
-// Storefront-wide details. Contact/social values come from env so the client
-// can fill them in without a code change; anything missing is simply hidden.
+// Storefront-wide details. WhatsApp and email come from lib/content.ts (env can
+// override); social links come from env; anything missing is simply hidden.
+
+import { content } from "@/lib/content";
 
 const digits = (v?: string) => v?.replace(/\D/g, "") || null;
 
@@ -14,9 +16,9 @@ export const site = {
   cities: ["Accra"],
   outsideAccra:
     "We deliver within Accra. Outside Accra? Choose Accra delivery — once your order lands we'll help you arrange onward transport to your region, paid separately. Message us on WhatsApp and we'll guide you.",
-  /** International format without "+", e.g. 233241234567 */
-  whatsapp: digits(process.env.NEXT_PUBLIC_WHATSAPP_NUMBER),
-  email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || null,
+  /** International format without "+", e.g. 8619835265530 (for wa.me links) */
+  whatsapp: digits(process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || content.whatsapp),
+  email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || content.email || null,
   socials: [
     { label: "Instagram", href: process.env.NEXT_PUBLIC_INSTAGRAM_URL },
     { label: "TikTok", href: process.env.NEXT_PUBLIC_TIKTOK_URL },
