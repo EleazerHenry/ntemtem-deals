@@ -24,10 +24,13 @@ const FIELD_ORDER: (keyof CheckoutInput)[] = ["fullName", "phone", "email", "cit
 export function CheckoutForm({
   zones,
   signedIn,
+  paymentsEnabled,
   prefill,
 }: {
   zones: Zone[];
   signedIn: boolean;
+  /** Paystack is set up — go straight to payment after placing the order */
+  paymentsEnabled: boolean;
   prefill: { fullName: string; email: string; phone: string; city?: string; area?: string; landmark?: string };
 }) {
   const router = useRouter();
@@ -47,6 +50,19 @@ export function CheckoutForm({
   const [applied, setApplied] = useState<Applied | null>(null);
   const [checkingCode, startCheckingCode] = useTransition();
   const [placing, startPlacing] = useTransition();
+  const [leaving, setLeaving] = useState(false);
+  // Back from Paystack lands here with an empty cart — show the unpaid order instead
+  const emptyCart = cart?.lines.length === 0;
+  useEffect(() => {
+    const back = () => {
+      const pending = readPendingOrder();
+      if (pending) window.location.replace(pending);
+    };
+    if (emptyCart) back();
+    const onShow = (e: PageTransitionEvent) => e.persisted && back(); // restored from the browser cache
+    window.addEventListener("pageshow", onShow);
+    return () => window.removeEventListener("pageshow", onShow);
+  }, [emptyCart]);
   const [summaryOpen, setSummaryOpen] = useState(false);
 
   const zone = zones.find((z) => z.city === form.city);
@@ -121,8 +137,17 @@ export function CheckoutForm({
     startPlacing(async () => {
       const result = await placeOrder(input);
       if (result.ok) {
-        refresh(); // the server emptied the cart
-        router.push(result.redirectTo);
+        // Straight to Paystack; the order page (with its pay button) is the fallback
+        const payUrl = paymentsEnabled ? await startPayment(result.orderNumber, result.orderKey) : null;
+        if (payUrl) {
+          rememberPendingOrder(result.redirectTo);
+          setLeaving(true);
+          window.location.assign(payUrl); // the cart reloads (empty) on the way back
+        } else {
+          setLeaving(true); // keep the form up (not "cart is empty") until the order page opens
+          refresh(); // the server emptied the cart
+          router.push(result.redirectTo);
+        }
         return;
       }
       if (result.fieldErrors) {
@@ -135,7 +160,7 @@ export function CheckoutForm({
     });
   }
 
-  if (cart && cart.lines.length === 0) {
+  if (cart && cart.lines.length === 0 && !leaving) {
     return (
       <div className="rounded-3xl border border-dashed bg-card px-6 py-16 text-center">
         <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-brand-50 text-brand-700">
@@ -326,18 +351,23 @@ export function CheckoutForm({
               {formError}
             </p>
           )}
-          <Button type="submit" size="xl" className="h-14 w-full text-base" disabled={placing || !cart || !!unavailable}>
-            {placing ? (
+          <Button type="submit" size="xl" className="h-14 w-full text-base" disabled={placing || leaving || !cart || !!unavailable}>
+            {placing || leaving ? (
               <>
-                <Loader2 className="animate-spin" data-icon="inline-start" /> Placing your order…
+                <Loader2 className="animate-spin" data-icon="inline-start" /> {paymentsEnabled ? "Opening secure payment…" : "Placing your order…"}
               </>
             ) : (
               <>
-                <Lock data-icon="inline-start" /> Place order{zone && cart ? ` · ${formatPrice(total)}` : ""}
+                <Lock data-icon="inline-start" />
+                {paymentsEnabled ? (zone && cart ? `Pay ${formatPrice(total)} securely` : "Pay securely") : `Place order${zone && cart ? ` · ${formatPrice(total)}` : ""}`}
               </>
             )}
           </Button>
-          <p className="text-center text-xs text-muted-foreground">You&apos;ll pay on the next step with Mobile Money or card.</p>
+          <p className="text-center text-xs text-muted-foreground">
+            {paymentsEnabled
+              ? "Mobile Money or card, on Paystack's secure page — then you come straight back."
+              : "We'll save your order and contact you about paying."}
+          </p>
         </div>
       </div>
 
@@ -407,6 +437,38 @@ function TextField({
       )}
     </div>
   );
+}
+
+const PENDING_KEY = "ntd_pending_order";
+function rememberPendingOrder(path: string) {
+  try {
+    sessionStorage.setItem(PENDING_KEY, path);
+  } catch {}
+}
+/** The order this tab just left for Paystack — read once, then forgotten. */
+function readPendingOrder() {
+  try {
+    const path = sessionStorage.getItem(PENDING_KEY);
+    sessionStorage.removeItem(PENDING_KEY);
+    return path?.startsWith("/order/") ? path : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Creates the Paystack transaction; null if it can't start (the order page then offers to retry). */
+async function startPayment(orderNumber: string, key: string): Promise<string | null> {
+  try {
+    const res = await fetch("/api/payments/initialize", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderNumber, key }),
+    });
+    const data = await res.json();
+    return res.ok && typeof data.authorizationUrl === "string" ? data.authorizationUrl : null;
+  } catch {
+    return null;
+  }
 }
 
 function Summary({

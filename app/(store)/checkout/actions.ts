@@ -6,7 +6,7 @@ import { Prisma } from "@prisma/client";
 import { sendVerificationEmail } from "@/lib/account";
 import { authOptions } from "@/lib/auth";
 import { loadCartView, resolveCart } from "@/lib/cart";
-import { checkCoupon, deliveryFeeFor, getDeliveryZones, isValidOrderKey, nextOrderNumber, orderPath, orderTotal } from "@/lib/checkout";
+import { checkCoupon, deliveryFeeFor, getDeliveryZones, isValidOrderKey, nextOrderNumber, orderKey, orderPath, orderTotal } from "@/lib/checkout";
 import { prisma } from "@/lib/prisma";
 import {
   accountPasswordSchema,
@@ -33,7 +33,7 @@ export async function applyCoupon(code: string): Promise<CouponResult> {
 }
 
 export type PlaceOrderResult =
-  | { ok: true; redirectTo: string }
+  | { ok: true; redirectTo: string; orderNumber: string; orderKey: string }
   | {
       ok: false;
       fieldErrors?: CheckoutFieldErrors;
@@ -160,7 +160,7 @@ export async function placeOrder(input: CheckoutInput): Promise<PlaceOrderResult
           },
           { timeout: 20_000, maxWait: 10_000 },
         );
-        return { ok: true, redirectTo: orderPath(order) };
+        return { ok: true, redirectTo: orderPath(order), orderNumber: order.orderNumber, orderKey: orderKey(order.id) };
       } catch (error) {
         if (error instanceof CouponUsedUp) {
           return { ok: false, fieldErrors: { couponCode: "That code was just used up. Remove it to continue." } };

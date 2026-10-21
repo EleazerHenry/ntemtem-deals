@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { CheckoutForm } from "@/components/store/checkout/checkout-form";
 import { authOptions } from "@/lib/auth";
 import { getDeliveryZones } from "@/lib/checkout";
+import { paystackSecret } from "@/lib/paystack";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = { title: "Checkout", robots: { index: false } };
@@ -27,6 +28,7 @@ export default async function CheckoutPage() {
       <CheckoutForm
         zones={zones}
         signedIn={!!user}
+        paymentsEnabled={!!paystackSecret()}
         prefill={{
           fullName: address?.fullName ?? user?.name ?? "",
           email: user?.email ?? "",
