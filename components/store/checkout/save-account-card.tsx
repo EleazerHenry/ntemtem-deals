@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Eye, EyeOff, Loader2, UserRound } from "lucide-react";
@@ -31,7 +32,12 @@ export function SaveAccountCard({
     return (
       <section className="rounded-3xl border bg-card p-6 text-sm">
         <p className="font-semibold">You already have an account with {email}</p>
-        <p className="mt-1 text-muted-foreground">Keep this page&apos;s link to check your order. Signing in to see all your orders arrives soon.</p>
+        <p className="mt-1 text-muted-foreground">
+          <Link href="/account/login" className="font-semibold text-foreground underline">
+            Sign in
+          </Link>{" "}
+          to see this order with your others — once your email is confirmed it joins your account automatically.
+        </p>
       </section>
     );
   }
@@ -46,7 +52,7 @@ export function SaveAccountCard({
         return;
       }
       await signIn("credentials", { email: result.email, password, redirect: false });
-      toast.success("Account created — your order is saved to it.");
+      toast.success("Account created — check your email to confirm it.");
       router.refresh();
     });
   }

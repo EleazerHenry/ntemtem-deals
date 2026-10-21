@@ -23,6 +23,7 @@ model User {
   email        String    @unique
   phone        String?
   passwordHash String?   // optional: guest-converted accounts may not set one immediately
+  emailVerified DateTime? // set when they click the link we email them
   role         Role      @default(CUSTOMER)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt

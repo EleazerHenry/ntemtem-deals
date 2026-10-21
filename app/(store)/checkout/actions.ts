@@ -3,6 +3,7 @@
 import bcrypt from "bcryptjs";
 import { getServerSession } from "next-auth";
 import { Prisma } from "@prisma/client";
+import { sendVerificationEmail } from "@/lib/account";
 import { authOptions } from "@/lib/auth";
 import { loadCartView, resolveCart } from "@/lib/cart";
 import { checkCoupon, deliveryFeeFor, getDeliveryZones, isValidOrderKey, nextOrderNumber, orderPath, orderTotal } from "@/lib/checkout";
@@ -189,7 +190,7 @@ export async function createAccountForOrder(orderId: string, key: string, passwo
       return { ok: false, error: `There's already an account for ${order.guestEmail}. Sign in to it to see your orders.` };
     }
 
-    await prisma.$transaction(async (tx) => {
+    const created = await prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
           name: order.guestName ?? "Customer",
@@ -204,7 +205,9 @@ export async function createAccountForOrder(orderId: string, key: string, passwo
       // address must not be handed to whoever typed it
       await tx.order.update({ where: { id: orderId }, data: { userId: user.id } });
       if (order.addressId) await tx.address.update({ where: { id: order.addressId }, data: { userId: user.id } });
+      return user;
     });
+    await sendVerificationEmail({ id: created.id, name: order.guestName ?? "there", email: order.guestEmail });
     return { ok: true, email: order.guestEmail };
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {

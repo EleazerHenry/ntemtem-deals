@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MessageCircle, Truck } from "lucide-react";
+import { MessageCircle, Truck, UserRound } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { CartDrawer } from "@/components/store/cart/cart-drawer";
 import { SearchBox } from "@/components/store/search-box";
@@ -41,6 +41,9 @@ export function StoreHeader({ categories }: { categories: StoreCategory[] }) {
                 <MessageCircle className="size-[18px]" /> Chat to order
               </a>
             )}
+            <Link href="/account" aria-label="Your account" className="grid size-11 place-items-center rounded-full transition-colors hover:bg-muted">
+              <UserRound className="size-[22px]" />
+            </Link>
             <CartDrawer />
           </div>
         </div>
