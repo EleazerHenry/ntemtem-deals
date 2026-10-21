@@ -5,8 +5,8 @@
 // Contact details (WhatsApp, email, socials) live in lib/site.ts, from env.
 
 export const content = {
-  /** CLIENT TO CONFIRM: may we say we're the team behind Osika Express? */
-  mentionOsika: false,
+  /** Client confirmed: say we're the team behind Osika Express. */
+  mentionOsika: true,
 
   /** CLIENT TO CONFIRM: phone number for calls, e.g. "024 123 4567". */
   phone: null as string | null,

@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { applyCoupon, placeOrder } from "@/app/(store)/checkout/actions";
 import { ArrivalNote } from "@/components/store/arrival-note";
 import { OutsideAccraNote } from "@/components/store/outside-accra-note";
+import { PaymentMarks } from "@/components/store/payment-marks";
 import { useCart } from "@/components/store/cart/cart-provider";
 import { ProductImage } from "@/components/store/product-image";
 import { Button } from "@/components/ui/button";
@@ -371,6 +372,7 @@ export function CheckoutForm({
               ? "Mobile Money or card, on Paystack's secure page — then you come straight back."
               : "We'll save your order and contact you about paying."}
           </p>
+          <PaymentMarks className="justify-center" />
           <p className="text-center text-xs text-muted-foreground">
             How we use and protect your details:{" "}
             {/* New tab, so the filled-in form isn't lost */}

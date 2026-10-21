@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
+import { PaymentMarks } from "@/components/store/payment-marks";
 import { site, whatsappLink } from "@/lib/site";
 import type { StoreCategory } from "@/lib/storefront";
 
@@ -15,6 +16,7 @@ export function StoreFooter({ categories }: { categories: StoreCategory[] }) {
         <div className="max-w-sm space-y-5">
           <Logo tone="light" />
           <p className="text-sm leading-relaxed text-paper/65">{site.description}</p>
+          <p className="text-sm font-medium text-paper/80">From the team behind Osika Express.</p>
           {whatsapp && (
             <a
               href={whatsapp}
@@ -54,7 +56,10 @@ export function StoreFooter({ categories }: { categories: StoreCategory[] }) {
           <p>
             © {year} {site.name}. {site.tagline}
           </p>
-          <p>Pay securely with Mobile Money or card · Delivered in Accra</p>
+          <div className="flex flex-col gap-2 sm:items-end">
+            <PaymentMarks />
+            <p>Pay securely with Mobile Money or card · Delivered in Accra</p>
+          </div>
         </div>
       </div>
     </footer>

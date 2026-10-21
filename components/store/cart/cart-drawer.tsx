@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRight, ImageIcon, Lock, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { ArrivalNote } from "@/components/store/arrival-note";
 import { useCart } from "@/components/store/cart/cart-provider";
+import { PaymentMarks } from "@/components/store/payment-marks";
 import { ProductImage } from "@/components/store/product-image";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -87,6 +88,7 @@ export function CartDrawer() {
               <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
                 <Lock className="size-3.5" /> Secure payment with Mobile Money or card
               </p>
+              <PaymentMarks className="-mt-2 justify-center" />
             </div>
           </>
         ) : (

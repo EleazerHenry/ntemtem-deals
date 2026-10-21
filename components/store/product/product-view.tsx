@@ -5,6 +5,7 @@ import Link from "next/link";
 import { BadgeCheck, Clock, MessageCircle, Minus, PackageCheck, Plus, ShoppingBag, Smartphone, Truck } from "lucide-react";
 import { useCart } from "@/components/store/cart/cart-provider";
 import { ProductGallery } from "@/components/store/product/product-gallery";
+import { OsikaLine, PaymentMarks } from "@/components/store/payment-marks";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/format";
 import type { ProductPageData } from "@/lib/storefront";
@@ -242,6 +243,10 @@ export function ProductView({
             href="/policies/returns"
           />
         </ul>
+        <div className="space-y-2">
+          <PaymentMarks />
+          <OsikaLine />
+        </div>
       </div>
 
       {/* Phone buy bar */}
