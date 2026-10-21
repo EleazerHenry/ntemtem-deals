@@ -7,7 +7,7 @@ export const site = {
   name: "Ntemtem Deals",
   tagline: "Fast Deals • Quality Products • To Ghana",
   description:
-    "Quality phone accessories, car accessories, home gadgets, fashion and electronics — sourced for you and delivered across Ghana in 10-12 days.",
+    "Quality phone accessories, car accessories, home gadgets, fashion and electronics — sourced for you and delivered in Accra in 10–12 days.",
   domain: "ntemtemdeals.com",
   deliveryDays: "10-12 days",
   /** Where we deliver. Everyone else picks Accra delivery and we help with onward transport. */

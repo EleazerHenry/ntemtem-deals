@@ -43,7 +43,7 @@ export default async function ShopPage({ searchParams }: Props) {
           <p className="max-w-xl text-muted-foreground">
             {params.sale
               ? "Our biggest savings right now — same quality, lower prices."
-              : "Everything in the store, sourced for you and delivered across Ghana in 10-12 days."}
+              : "Everything in the store, sourced for you and delivered in Accra in 10–12 days."}
           </p>
         )}
       </header>

@@ -138,12 +138,12 @@ export function ProductView({
           <div className="text-sm">
             <p className="font-semibold">
               {product.stockType === "PREORDER"
-                ? `Pre-order · Delivered in ${product.deliveryEstimate}`
-                : `In stock in Ghana · Delivered in ${product.deliveryEstimate}`}
+                ? "Pre-order — we source it for you"
+                : `In stock · Delivered in Accra in ${product.deliveryEstimate}`}
             </p>
             {arrival && (
               <p className="text-muted-foreground">
-                Order today, arrives around <span className="font-medium text-foreground">{arrival}</span>
+                Arrives in Accra around <span className="font-medium text-foreground">{arrival}</span> · {product.deliveryEstimate.replace("-", "–")} after you pay
               </p>
             )}
           </div>

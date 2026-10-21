@@ -97,7 +97,7 @@ function Hero({ products }: { products: ProductCardData[] }) {
               <span className="text-brand-400">Brought to you.</span>
             </h1>
             <p className="max-w-md text-base text-paper/70 sm:text-lg">
-              Gadgets, accessories and home essentials — sourced for you and delivered across Ghana in{" "}
+              Gadgets, accessories and home essentials — sourced for you and delivered in Accra in{" "}
               {site.deliveryDays}.
             </p>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
@@ -167,7 +167,7 @@ function HeroGraphic() {
 
 function TrustStrip() {
   const items = [
-    { icon: Truck, title: `Delivered in ${site.deliveryDays}`, body: "Tracked from order to your door" },
+    { icon: Truck, title: `In Accra in ${site.deliveryDays}`, body: "Counted from payment, tracked every step" },
     { icon: Smartphone, title: "MoMo or card", body: "MTN, Telecel, AirtelTigo & cards" },
     { icon: MapPin, title: "Delivery in Accra", body: "Elsewhere? We help with onward transport" },
     { icon: BadgeCheck, title: "Quality checked", body: "Refunds if something's wrong" },
@@ -280,8 +280,8 @@ function HowItWorks() {
     { icon: Plane, title: "We source it", body: "We buy your item from trusted suppliers and ship it to Ghana." },
     {
       icon: PackageSearch,
-      title: `Delivered in ${site.deliveryDays}`,
-      body: "Follow every step from your account, then receive it at your door.",
+      title: `In Accra in ${site.deliveryDays}`,
+      body: "Follow every step from your account until it reaches you in Accra.",
     },
   ];
   return (

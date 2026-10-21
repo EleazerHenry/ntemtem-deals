@@ -53,7 +53,7 @@ export default async function AccountOrderPage({ params }: Props) {
               <PayButton orderNumber={order.orderNumber} enabled={!!paystackSecret()} whatsapp={whatsappLink(`Hi Ntemtem Deals! I'd like to pay for order ${order.orderNumber}.`)} />
             </section>
           )}
-          <OrderTracker status={order.status} history={order.history} deliveryCity={order.deliveryCity} pickup={order.pickup} deliveryDays={order.zoneDays} />
+          <OrderTracker status={order.status} history={order.history} deliveryCity={order.deliveryCity} pickup={order.pickup} />
         </div>
         <aside className="space-y-6">
           <OrderSummaryCard order={order} />

@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     template: "%s · Ntemtem Deals",
   },
   description:
-    "Shop phone accessories, car accessories, home gadgets, fashion and electronics — sourced for you and delivered across Ghana in 10-12 days.",
+    "Shop phone accessories, car accessories, home gadgets, fashion and electronics — sourced for you and delivered in Accra in 10–12 days.",
 };
 
 export const viewport: Viewport = {

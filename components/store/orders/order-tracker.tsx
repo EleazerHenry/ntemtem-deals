@@ -26,14 +26,11 @@ export function OrderTracker({
   history,
   deliveryCity,
   pickup,
-  deliveryDays,
 }: {
   status: OrderStatusValue;
   history: TrackerHistory[];
   deliveryCity: string;
   pickup: boolean;
-  /** Zone estimate after arrival, e.g. "1-2 days" */
-  deliveryDays?: string;
 }) {
   const visible = history.filter((h) => !isInternalNote(h.note));
   const current = stepIndex(status);
@@ -62,13 +59,13 @@ export function OrderTracker({
     status === "DELIVERED"
       ? deliveredAt && `Delivered ${dayMonth.format(deliveredAt)}`
       : paidAt
-        ? `Expected around ${dayMonth.format(new Date(paidAt.getTime() + 10 * DAY))} – ${dayMonth.format(new Date(paidAt.getTime() + 12 * DAY))}`
-        : "Arrives 10–12 days after payment";
+        ? `Arrives in Accra around ${dayMonth.format(new Date(paidAt.getTime() + 10 * DAY))} – ${dayMonth.format(new Date(paidAt.getTime() + 12 * DAY))} · 10–12 days after you pay`
+        : "Arrives in Accra 10–12 days after you pay";
   const now =
     status === "ARRIVED"
       ? pickup
         ? `It's here! We'll call or WhatsApp you when it's ready to pick up in ${deliveryCity}.`
-        : `It's here! Delivery to you in ${deliveryCity} usually takes ${deliveryDays ?? "1–2 days"}.`
+        : `It's here in ${deliveryCity}! We'll be in touch to bring it to you.`
       : copy.now;
 
   return (

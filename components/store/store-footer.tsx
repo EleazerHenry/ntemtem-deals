@@ -54,7 +54,7 @@ export function StoreFooter({ categories }: { categories: StoreCategory[] }) {
           <p>
             © {year} {site.name}. {site.tagline}
           </p>
-          <p>Pay securely with Mobile Money or card · Delivered across Ghana</p>
+          <p>Pay securely with Mobile Money or card · Delivered in Accra</p>
         </div>
       </div>
     </footer>

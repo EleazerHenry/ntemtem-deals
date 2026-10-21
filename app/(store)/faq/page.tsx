@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { ContentPage, WhatsAppNudge } from "@/components/store/content-page";
 import { getDeliveryZones } from "@/lib/checkout";
-import { content, deliveryTimeSentence } from "@/lib/content";
+import { deliveryTimeSentence } from "@/lib/content";
 import { whatsappLink } from "@/lib/site";
 
 export const revalidate = 600;
@@ -29,7 +29,7 @@ export default async function FaqPage() {
         <p>
           You browse, add items to your cart, and pay securely online. Most items are then sourced to order from our overseas suppliers and delivered to
           you in Ghana — usually within{" "}
-          {content.doorToDoor ? "around 10–12 days" : "around 10–12 days to reach Ghana, plus a short local delivery"}. You&apos;ll get updates at every
+          around 10–12 days in Accra. You&apos;ll get updates at every
           step.
         </p>
       ),

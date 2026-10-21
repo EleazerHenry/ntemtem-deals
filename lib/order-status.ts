@@ -51,7 +51,7 @@ export const STEP_COPY: Record<FlowStatus, StepCopy> = {
     short: "In Ghana",
     title: "Arrived in Ghana",
     headline: "Arrived in Ghana",
-    now: "It's here! We're preparing it for delivery to you.",
+    now: "It's here in Accra! We're preparing it for delivery to you.",
     expect: "About 9–11 days after payment",
   },
   DELIVERED: {
@@ -68,7 +68,7 @@ export const ADMIN_STEP: Record<OrderStatusValue, { label: string; advance?: str
   PENDING: { label: "Awaiting payment", advance: "Mark as paid", defaultNote: "Payment received — we're getting your order ready to source." },
   CONFIRMED: { label: "Paid", advance: "Mark as sourcing", defaultNote: "We're buying your items from our supplier and checking them." },
   SOURCING: { label: "Sourcing", advance: "Mark as shipped", defaultNote: "Your order has left China and is on its way to Ghana." },
-  SHIPPED: { label: "Shipped to Ghana", advance: "Mark as arrived in Ghana", defaultNote: "Your order has arrived in Ghana. We'll be in touch to deliver it." },
+  SHIPPED: { label: "Shipped to Ghana", advance: "Mark as arrived in Ghana", defaultNote: "Your order has arrived in Accra. We'll be in touch to deliver it." },
   ARRIVED: { label: "In Ghana", advance: "Mark as delivered", defaultNote: "Delivered. Thank you for shopping with Ntemtem Deals!" },
   DELIVERED: { label: "Delivered" },
   CANCELLED: { label: "Cancelled" },

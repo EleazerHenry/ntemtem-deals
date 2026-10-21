@@ -93,7 +93,7 @@ export default async function OrderPage({ params, searchParams }: Props) {
             </section>
           )}
 
-          <OrderTracker status={order.status} history={order.history} deliveryCity={order.deliveryCity} pickup={order.pickup} deliveryDays={order.zoneDays} />
+          <OrderTracker status={order.status} history={order.history} deliveryCity={order.deliveryCity} pickup={order.pickup} />
 
           {!order.userId && !session?.user && (
             <SaveAccountCard orderId={order.id} orderKey={orderKey(order.id)} email={order.guestEmail ?? ""} accountExists={accountExists} />

@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!category) return { title: "Category not found" };
   return {
     title: category.name,
-    description: category.description ?? `Shop ${category.name} at Ntemtem Deals — delivered across Ghana in 10-12 days.`,
+    description: category.description ?? `Shop ${category.name} at Ntemtem Deals — delivered in Accra in 10–12 days.`,
     alternates: { canonical: `/categories/${category.slug}` },
   };
 }

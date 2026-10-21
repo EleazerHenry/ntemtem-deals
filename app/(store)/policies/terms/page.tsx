@@ -41,7 +41,7 @@ export default function TermsPage() {
         <h2>4. Pre-order and delivery estimates</h2>
         <p>
           Most items are sourced to order from overseas suppliers. Delivery dates shown are good-faith estimates,{" "}
-          {content.doorToDoor ? "typically around 10–12 days to your door," : "typically around 10–12 days to reach Ghana plus local delivery,"} and may
+          typically around 10–12 days from payment to arrival in Accra, and may
           occasionally change due to shipping or customs. We&apos;ll keep you informed and deliver as quickly as we can.
         </p>
 

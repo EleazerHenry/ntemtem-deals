@@ -12,7 +12,6 @@ export async function getOrderView(orderNumber: string) {
     },
   });
   if (!order) return null;
-  const zone = await prisma.deliveryZone.findUnique({ where: { city: order.deliveryCity }, select: { estimatedDays: true } });
   return {
     id: order.id,
     orderNumber: order.orderNumber,
@@ -27,7 +26,6 @@ export async function getOrderView(orderNumber: string) {
     deliveryArea: order.deliveryArea,
     deliveryLandmark: order.deliveryLandmark,
     pickup: order.deliveryArea === "Free pickup",
-    zoneDays: zone?.estimatedDays,
     subtotal: order.subtotal.toNumber(),
     deliveryFee: order.deliveryFee.toNumber(),
     discount: order.discountAmount.toNumber(),

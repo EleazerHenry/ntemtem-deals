@@ -5,13 +5,6 @@
 // Contact details (WhatsApp, email, socials) live in lib/site.ts, from env.
 
 export const content = {
-  /**
-   * CLIENT TO CONFIRM: is 10-12 days to the customer's door (true), or to Ghana
-   * with local delivery on top (false)? The pages use the careful wording until
-   * he answers.
-   */
-  doorToDoor: false,
-
   /** CLIENT TO CONFIRM: may we say we're the team behind Osika Express? */
   mentionOsika: false,
 
@@ -52,9 +45,10 @@ export const content = {
   privacyUpdated: "21 October 2026",
 } as const;
 
-/** The delivery promise in a sentence, worded for whichever answer the client gives. */
+/**
+ * The delivery promise (client confirmed): 10–12 days is the total, to Accra —
+ * no separate local-delivery leg on top.
+ */
 export function deliveryTimeSentence() {
-  return content.doorToDoor
-    ? "Your order arrives at your door in around 10–12 days."
-    : "Your item takes around 10–12 days to reach Ghana, followed by a short local delivery to your city.";
+  return "Your order arrives in Accra around 10–12 days after you pay. That's the whole wait — there's no extra local-delivery time on top.";
 }
