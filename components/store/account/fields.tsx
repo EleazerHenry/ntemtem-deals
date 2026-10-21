@@ -66,8 +66,19 @@ export function FormAlert({ tone = "error", children }: { tone?: "error" | "succ
   );
 }
 
-/** Only follow callbacks within the store — never off-site, never into the admin. */
+/**
+ * Only follow callbacks within the store — never off-site, never into the admin.
+ * Resolved the way the browser will: "/\evil.com" and friends become another host.
+ */
 export function safeNext(url: string | null | undefined, fallback = "/account") {
-  if (!url || !url.startsWith("/") || url.startsWith("//") || url.startsWith("/admin") || url.startsWith("/account/login")) return fallback;
-  return url;
+  if (!url || !url.startsWith("/")) return fallback;
+  const base = "https://store.invalid";
+  let target: URL;
+  try {
+    target = new URL(url, base);
+  } catch {
+    return fallback;
+  }
+  if (target.origin !== base || target.pathname.startsWith("/admin") || target.pathname.startsWith("/account/login")) return fallback;
+  return target.pathname + target.search + target.hash;
 }
