@@ -22,7 +22,10 @@ export default function TermsPage() {
         <h2 className="!mt-0">1. About us</h2>
         <p>
           Ntemtem Deals (&ldquo;we&rdquo;, &ldquo;us&rdquo;, &ldquo;our&rdquo;) is an online shop delivering products to customers in Ghana.
-          {content.registration && ` ${content.registration}.`}
+        </p>
+        <p>
+          Ntemtem Deals is a trading name operated by {content.operator.name}, registered in Ghana under the Registration of Business Names Act, 1962
+          (Reg. No. {content.operator.regNo}).
         </p>
 
         <h2>2. Products</h2>

@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default function PrivacyPage() {
-  const business = content.legalName ?? site.name;
+  const whatsapp = whatsappLink();
 
   return (
     <ContentPage
@@ -21,8 +21,16 @@ export default function PrivacyPage() {
       <div className="content-prose">
         <h2 className="!mt-0">Who we are</h2>
         <p>
-          The business responsible for your data (the &ldquo;data controller&rdquo;) is {business}
-          {content.address && `, ${content.address}`}. You can reach us <ContactUs />.
+          The business responsible for your data (the data controller) is {content.operator.name} (Reg. No. {content.operator.regNo}), trading as{" "}
+          {site.name}, contactable at <a href={`mailto:${content.email}`}>{content.email}</a> and{" "}
+          {whatsapp ? (
+            <a href={whatsapp} target="_blank" rel="noreferrer">
+              {content.whatsapp}
+            </a>
+          ) : (
+            content.whatsapp
+          )}
+          .
         </p>
 
         <h2>What we collect</h2>

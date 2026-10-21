@@ -28,20 +28,15 @@ export const content = {
   /** CLIENT TO CONFIRM: how long an approved refund takes to arrive. */
   refundTime: "5–10 working days",
 
-  /** CLIENT TO CONFIRM: registered business name/number for the Terms, if any. */
-  registration: null as string | null,
+  /**
+   * The registered entity behind the brand (client confirmed). Shown only in the
+   * Terms and the Privacy Policy — everywhere else the shop is "Ntemtem Deals".
+   */
+  operator: { name: "Osika Logistics Services", regNo: "BN963290825" },
 
   /** Set when the Terms are published or changed. */
   termsUpdated: "21 October 2026",
 
-  /**
-   * Business name — the "data controller" on the Privacy Policy. Client: "Ntemtem
-   * Deals" for now; update if the business is registered under another name.
-   */
-  legalName: "Ntemtem Deals" as string | null,
-
-  /** CLIENT TO CONFIRM: business address for the Privacy Policy, e.g. "Oxford Street, Osu, Accra". */
-  address: null as string | null,
 
   /** CLIENT TO CONFIRM: how long order records are kept (legal/tax). */
   recordsKept: "up to 6 years",
