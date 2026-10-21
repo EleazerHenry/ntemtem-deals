@@ -2,8 +2,9 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import { SERVICE_UNAVAILABLE } from "@/lib/auth-errors";
+import { RATE_LIMITED, SERVICE_UNAVAILABLE } from "@/lib/auth-errors";
 import { prisma } from "@/lib/prisma";
+import { LIMITS, hitAll, ipFrom } from "@/lib/rate-limit";
 
 const credentialsSchema = z.object({
   email: z.email().trim().toLowerCase(),
@@ -24,9 +25,21 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         const parsed = credentialsSchema.safeParse(credentials);
         if (!parsed.success) return null;
+
+        // Password guessing: cap attempts per network and per account
+        const header = (name: string) => {
+          const value = req?.headers?.[name];
+          return Array.isArray(value) ? value[0] : value;
+        };
+        const ip = ipFrom(header);
+        const allowed = await hitAll([
+          [`login:ip:${ip}`, LIMITS.loginPerIp],
+          [`login:email:${parsed.data.email}`, LIMITS.loginPerEmail],
+        ]);
+        if (!allowed.ok) throw new Error(RATE_LIMITED);
 
         let user;
         try {

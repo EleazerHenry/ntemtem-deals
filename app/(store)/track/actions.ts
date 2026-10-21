@@ -2,6 +2,7 @@
 
 import { orderPath } from "@/lib/checkout";
 import { prisma } from "@/lib/prisma";
+import { LIMITS, clientIp, hit, waitLabel } from "@/lib/rate-limit";
 
 export type LookupResult = { ok: true; redirectTo: string } | { ok: false; error: string };
 
@@ -16,6 +17,8 @@ export async function lookupOrder(input: { orderNumber: string; email: string })
   const email = String(input.email ?? "").trim().toLowerCase();
   if (!orderNumber) return { ok: false, error: "Enter your order number — it looks like NTD-0012." };
   if (!/^\S+@\S+\.\S+$/.test(email)) return { ok: false, error: "Enter the email you used when ordering." };
+  const limit = await hit(`track:ip:${await clientIp()}`, LIMITS.trackPerIp);
+  if (!limit.ok) return { ok: false, error: `Too many lookups. Try again in ${waitLabel(limit.retryAfterSeconds)}.` };
 
   const order = await prisma.order.findFirst({
     where: { orderNumber, guestEmail: { equals: email, mode: "insensitive" } },

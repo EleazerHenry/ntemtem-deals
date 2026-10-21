@@ -3,6 +3,7 @@
 import bcrypt from "bcryptjs";
 import { requireAdmin } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+import { LIMITS, hit, waitLabel } from "@/lib/rate-limit";
 import {
   changePasswordErrors,
   changePasswordSchema,
@@ -17,6 +18,8 @@ export async function changePassword(input: ChangePasswordValues): Promise<Chang
 
   const parsed = changePasswordSchema.safeParse(input);
   if (!parsed.success) return { ok: false, fieldErrors: changePasswordErrors(parsed.error) };
+  const limit = await hit(`password-change:user:${admin.id}`, LIMITS.passwordChangePerUser);
+  if (!limit.ok) return { ok: false, formError: `Too many attempts. Try again in ${waitLabel(limit.retryAfterSeconds)}.` };
 
   try {
     const user = await prisma.user.findUnique({ where: { id: admin.id }, select: { passwordHash: true } });

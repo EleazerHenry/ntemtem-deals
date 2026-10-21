@@ -8,6 +8,7 @@ import { authOptions } from "@/lib/auth";
 import { loadCartView, resolveCart } from "@/lib/cart";
 import { checkCoupon, deliveryFeeFor, getDeliveryZones, isValidOrderKey, nextOrderNumber, orderKey, orderPath, orderTotal } from "@/lib/checkout";
 import { prisma } from "@/lib/prisma";
+import { LIMITS, clientIp, hit, waitLabel } from "@/lib/rate-limit";
 import {
   accountPasswordSchema,
   checkoutFieldErrors,
@@ -20,6 +21,9 @@ export type CouponResult = { ok: true; code: string; discount: number; label: st
 
 /** "Apply" button: checks the code against the visitor's real cart subtotal. */
 export async function applyCoupon(code: string): Promise<CouponResult> {
+  // Guessing codes one after another
+  const limit = await hit(`coupon:ip:${await clientIp()}`, LIMITS.couponPerIp);
+  if (!limit.ok) return { ok: false, error: `Too many codes tried. Try again in ${waitLabel(limit.retryAfterSeconds)}.` };
   try {
     const cart = await resolveCart({ create: false });
     const view = cart ? await loadCartView(cart.id) : null;
@@ -49,6 +53,8 @@ export async function placeOrder(input: CheckoutInput): Promise<PlaceOrderResult
   const parsed = checkoutSchema.safeParse(input);
   if (!parsed.success) return { ok: false, fieldErrors: checkoutFieldErrors(parsed.error) };
   const data = parsed.data;
+  const limit = await hit(`order:ip:${await clientIp()}`, LIMITS.orderPerIp);
+  if (!limit.ok) return { ok: false, formError: `Too many orders in a short time. Try again in ${waitLabel(limit.retryAfterSeconds)}, or message us on WhatsApp.` };
 
   try {
     const session = await getServerSession(authOptions);
@@ -184,6 +190,8 @@ export async function createAccountForOrder(orderId: string, key: string, passwo
   const pw = accountPasswordSchema.safeParse(password);
   if (!pw.success) return { ok: false, error: pw.error.issues[0].message };
   if (typeof orderId !== "string" || !isValidOrderKey(orderId, key)) return { ok: false, error: "This link isn't valid any more." };
+  const limit = await hit(`save-account:ip:${await clientIp()}`, LIMITS.saveAccountPerIp);
+  if (!limit.ok) return { ok: false, error: `Too many attempts. Try again in ${waitLabel(limit.retryAfterSeconds)}.` };
 
   try {
     const order = await prisma.order.findUnique({

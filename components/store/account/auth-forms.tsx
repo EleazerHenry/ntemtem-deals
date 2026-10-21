@@ -9,7 +9,7 @@ import { registerCustomer, requestPasswordReset, resetPassword } from "@/app/(st
 import { FormAlert, PasswordField, TextField, safeNext } from "@/components/store/account/fields";
 import { useCart } from "@/components/store/cart/cart-provider";
 import { Button } from "@/components/ui/button";
-import { SERVICE_UNAVAILABLE } from "@/lib/auth-errors";
+import { RATE_LIMITED, SERVICE_UNAVAILABLE } from "@/lib/auth-errors";
 
 function Submit({ pending, children, pendingLabel }: { pending: boolean; children: React.ReactNode; pendingLabel: string }) {
   return (
@@ -36,7 +36,9 @@ export function LoginForm({ next, notice }: { next?: string; notice?: string }) 
         setError(
           result?.error === SERVICE_UNAVAILABLE
             ? "We couldn't reach the store right now. Check your connection and try again."
-            : "That email and password don't match. Check for typos, or reset your password.",
+            : result?.error === RATE_LIMITED
+              ? "Too many sign-in attempts. Wait 15 minutes and try again, or reset your password."
+              : "That email and password don't match. Check for typos, or reset your password.",
         );
         return;
       }

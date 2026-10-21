@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { isValidOrderKey } from "@/lib/checkout";
 import { initializeTransaction, newReference, paystackSecret } from "@/lib/paystack";
 import { prisma } from "@/lib/prisma";
+import { LIMITS, hit, ipFrom } from "@/lib/rate-limit";
 
 const schema = z.object({ orderNumber: z.string().regex(/^NTD-\d+$/), key: z.string().max(64).optional() });
 
@@ -13,6 +14,13 @@ export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
   if (origin && new URL(origin).host !== request.headers.get("host")) {
     return NextResponse.json({ error: "Not allowed." }, { status: 403 });
+  }
+  const limit = await hit(`pay:ip:${ipFrom((name) => request.headers.get(name))}`, LIMITS.payPerIp);
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: "Too many payment attempts. Wait a few minutes and try again." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfterSeconds) } },
+    );
   }
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Something went wrong — please refresh the page." }, { status: 400 });

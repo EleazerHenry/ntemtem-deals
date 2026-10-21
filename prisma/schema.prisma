@@ -18,15 +18,15 @@ datasource db {
 // USERS — customers and admins
 // ------------------------------------------------------------
 model User {
-  id           String    @id @default(cuid())
-  name         String
-  email        String    @unique
-  phone        String?
-  passwordHash String?   // optional: guest-converted accounts may not set one immediately
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  phone         String?
+  passwordHash  String? // optional: guest-converted accounts may not set one immediately
   emailVerified DateTime? // set when they click the link we email them
-  role         Role      @default(CUSTOMER)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  role          Role      @default(CUSTOMER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   orders    Order[]
   addresses Address[]
@@ -43,14 +43,14 @@ enum Role {
 // Flexible: client creates his own categories in the admin
 // ------------------------------------------------------------
 model Category {
-  id           String    @id @default(cuid())
+  id           String   @id @default(cuid())
   name         String
-  slug         String    @unique
+  slug         String   @unique
   description  String?
-  image        String?   // Cloudinary URL — category banner
-  displayOrder Int       @default(0)
-  isActive     Boolean   @default(true)
-  createdAt    DateTime  @default(now())
+  image        String? // Cloudinary URL — category banner
+  displayOrder Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
 
   products Product[]
 }
@@ -64,18 +64,18 @@ model Product {
   slug             String    @unique
   description      String    @db.Text
   categoryId       String
-  price            Decimal   @db.Decimal(10, 2)   // selling price in GHS
-  compareAtPrice   Decimal?  @db.Decimal(10, 2)   // "was" price for showing deals
-  images           String[]                        // array of Cloudinary URLs
+  price            Decimal   @db.Decimal(10, 2) // selling price in GHS
+  compareAtPrice   Decimal?  @db.Decimal(10, 2) // "was" price for showing deals
+  images           String[] // array of Cloudinary URLs
   stockType        StockType @default(PREORDER)
   deliveryEstimate String    @default("10-12 days") // shown to customer
-  isActive         Boolean   @default(true)        // show/hide without deleting
-  isFeatured       Boolean   @default(false)       // show on homepage
+  isActive         Boolean   @default(true) // show/hide without deleting
+  isFeatured       Boolean   @default(false) // show on homepage
   hasVariants      Boolean   @default(false)
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  category   Category          @relation(fields: [categoryId], references: [id])
+  category   Category         @relation(fields: [categoryId], references: [id])
   variants   ProductVariant[]
   orderItems OrderItem[]
   cartItems  CartItem[]
@@ -85,8 +85,8 @@ model Product {
 }
 
 enum StockType {
-  PREORDER   // sourced from China on order (default)
-  IN_STOCK   // future: items the client stocks locally
+  PREORDER // sourced from China on order (default)
+  IN_STOCK // future: items the client stocks locally
 }
 
 // ------------------------------------------------------------
@@ -94,14 +94,14 @@ enum StockType {
 // Simple products have none; products with options have variants
 // ------------------------------------------------------------
 model ProductVariant {
-  id              String   @id @default(cuid())
+  id              String  @id @default(cuid())
   productId       String
-  name            String   // e.g. "Red", "2 metres", "iPhone 15"
-  priceAdjustment Decimal  @default(0) @db.Decimal(10, 2) // +/- on base price
+  name            String // e.g. "Red", "2 metres", "iPhone 15"
+  priceAdjustment Decimal @default(0) @db.Decimal(10, 2) // +/- on base price
   sku             String?
-  isActive        Boolean  @default(true)
-  sortOrder       Int      @default(0) // order the owner listed them in
-  imageUrl        String?  // optional: one of the product's photos shown when this option is picked
+  isActive        Boolean @default(true)
+  sortOrder       Int     @default(0) // order the owner listed them in
+  imageUrl        String? // optional: one of the product's photos shown when this option is picked
 
   product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
   cartItems  CartItem[]
@@ -115,12 +115,12 @@ model ProductVariant {
 // ------------------------------------------------------------
 model Address {
   id        String   @id @default(cuid())
-  userId    String?  // optional — guests don't save
+  userId    String? // optional — guests don't save
   fullName  String
   phone     String
-  city      String   // Accra | Kumasi | Cape Coast | Takoradi
-  area      String   // neighbourhood / suburb
-  landmark  String?  // "near the blue kiosk" — very Ghana-practical
+  city      String // Accra | Kumasi | Cape Coast | Takoradi
+  area      String // neighbourhood / suburb
+  landmark  String? // "near the blue kiosk" — very Ghana-practical
   isDefault Boolean  @default(false)
   createdAt DateTime @default(now())
 
@@ -176,8 +176,8 @@ model CartItem {
 // so order history never changes if a product is later edited
 // ------------------------------------------------------------
 model Order {
-  id          String   @id @default(cuid())
-  orderNumber String   @unique // human-friendly e.g. "NTD-0001"
+  id          String @id @default(cuid())
+  orderNumber String @unique // human-friendly e.g. "NTD-0001"
 
   // Customer — either a registered user OR a guest
   userId     String?
@@ -186,17 +186,17 @@ model Order {
   guestPhone String?
 
   // Delivery — snapshot of where it's going
-  addressId       String?
-  deliveryCity    String
-  deliveryArea    String
+  addressId        String?
+  deliveryCity     String
+  deliveryArea     String
   deliveryLandmark String?
 
   // Money
-  subtotal       Decimal  @db.Decimal(10, 2)
-  deliveryFee    Decimal  @db.Decimal(10, 2)
-  discountAmount Decimal  @default(0) @db.Decimal(10, 2)
+  subtotal       Decimal @db.Decimal(10, 2)
+  deliveryFee    Decimal @db.Decimal(10, 2)
+  discountAmount Decimal @default(0) @db.Decimal(10, 2)
   couponId       String?
-  total          Decimal  @db.Decimal(10, 2)
+  total          Decimal @db.Decimal(10, 2)
 
   status        OrderStatus   @default(PENDING)
   paymentStatus PaymentStatus @default(UNPAID)
@@ -204,9 +204,9 @@ model Order {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user          User?               @relation(fields: [userId], references: [id])
-  address       Address?            @relation(fields: [addressId], references: [id])
-  coupon        Coupon?             @relation(fields: [couponId], references: [id])
+  user          User?                @relation(fields: [userId], references: [id])
+  address       Address?             @relation(fields: [addressId], references: [id])
+  coupon        Coupon?              @relation(fields: [couponId], references: [id])
   items         OrderItem[]
   payment       Payment?
   statusHistory OrderStatusHistory[]
@@ -218,11 +218,11 @@ model Order {
 model OrderItem {
   id          String  @id @default(cuid())
   orderId     String
-  productId   String?  // reference back (nullable if product later deleted)
+  productId   String? // reference back (nullable if product later deleted)
   variantId   String?
-  productName String   // SNAPSHOT
-  variantName String?  // SNAPSHOT
-  price       Decimal  @db.Decimal(10, 2) // SNAPSHOT — price actually paid
+  productName String // SNAPSHOT
+  variantName String? // SNAPSHOT
+  price       Decimal @db.Decimal(10, 2) // SNAPSHOT — price actually paid
   quantity    Int
 
   order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -233,12 +233,12 @@ model OrderItem {
 }
 
 enum OrderStatus {
-  PENDING    // ordered, awaiting payment
-  CONFIRMED  // paid
-  SOURCING   // being bought in China
-  SHIPPED    // en route to Ghana
-  ARRIVED    // in Ghana
-  DELIVERED  // customer has it
+  PENDING // ordered, awaiting payment
+  CONFIRMED // paid
+  SOURCING // being bought in China
+  SHIPPED // en route to Ghana
+  ARRIVED // in Ghana
+  DELIVERED // customer has it
   CANCELLED
 }
 
@@ -256,7 +256,7 @@ model OrderStatusHistory {
   id        String      @id @default(cuid())
   orderId   String
   status    OrderStatus
-  note      String?     // "Your order has been sourced and is being shipped"
+  note      String? // "Your order has been sourced and is being shipped"
   createdAt DateTime    @default(now())
 
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -268,14 +268,14 @@ model OrderStatusHistory {
 // PAYMENT — Paystack transaction records
 // ------------------------------------------------------------
 model Payment {
-  id        String        @id @default(cuid())
-  orderId   String        @unique
-  reference String        @unique // Paystack transaction reference
-  amount    Decimal       @db.Decimal(10, 2)
+  id        String           @id @default(cuid())
+  orderId   String           @unique
+  reference String           @unique // Paystack transaction reference
+  amount    Decimal          @db.Decimal(10, 2)
   method    PaymentMethod? // known once Paystack reports how they paid (card / mobile money)
   status    PaymentTxnStatus @default(PENDING)
   paidAt    DateTime?
-  createdAt DateTime      @default(now())
+  createdAt DateTime         @default(now())
 
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
@@ -300,7 +300,7 @@ model Coupon {
   type           CouponType
   value          Decimal    @db.Decimal(10, 2) // 10 for 10%, or 20 for GHS 20 off
   minOrderAmount Decimal?   @db.Decimal(10, 2) // "spend GHS 100 to use"
-  maxUses        Int?       // limit total redemptions
+  maxUses        Int? // limit total redemptions
   usedCount      Int        @default(0)
   expiresAt      DateTime?
   isActive       Boolean    @default(true)
@@ -312,4 +312,14 @@ model Coupon {
 enum CouponType {
   PERCENTAGE
   FIXED
+}
+
+// Counters for rate limiting (sign-in, password reset, checkout…). Shared by
+// every server instance; rows expire on their own and are pruned now and then.
+model RateLimit {
+  key     String   @id
+  count   Int
+  resetAt DateTime
+
+  @@index([resetAt])
 }

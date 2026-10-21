@@ -7,6 +7,7 @@ import { Prisma } from "@prisma/client";
 import { attachGuestOrders, getCustomer, sendPasswordResetEmail, sendVerificationEmail } from "@/lib/account";
 import { emailConfigured } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
+import { LIMITS, clientIp, hit, waitLabel } from "@/lib/rate-limit";
 import { passwordFingerprint, readToken } from "@/lib/tokens";
 import { normalizeGhanaPhone } from "@/lib/validations/checkout";
 import { emailSchema, fieldErrors, newPasswordSchema, registerSchema, type FieldErrors } from "@/lib/validations/customer";
@@ -21,6 +22,8 @@ export async function registerCustomer(input: { name: string; email: string; pho
   const parsed = registerSchema.safeParse(input);
   if (!parsed.success) return { ok: false, fieldErrors: fieldErrors(parsed.error) };
   const { name, email, phone, password } = parsed.data;
+  const limit = await hit(`register:ip:${await clientIp()}`, LIMITS.registerPerIp);
+  if (!limit.ok) return { ok: false, formError: `Too many new accounts from this network. Try again in ${waitLabel(limit.retryAfterSeconds)}.` };
 
   try {
     const exists = await prisma.user.findUnique({ where: { email }, select: { id: true } });
@@ -48,6 +51,8 @@ export async function resendVerification(): Promise<SimpleResult> {
   if (!customer) return { ok: false, error: "Sign in first." };
   if (customer.emailVerified) return { ok: true, message: "Your email is already confirmed." };
   if (!emailOn()) return { ok: false, error: "We can't send emails just yet — please try again later." };
+  const limit = await hit(`verify:user:${customer.id}`, LIMITS.verifyEmailPerUser);
+  if (!limit.ok) return { ok: false, error: `We've sent a few links already. Check your inbox and spam, or try again in ${waitLabel(limit.retryAfterSeconds)}.` };
   const { sent } = await sendVerificationEmail(customer);
   return sent ? { ok: true, message: `New link sent to ${customer.email}.` } : { ok: false, error: "Couldn't send the email. Please try again in a minute." };
 }
@@ -57,11 +62,14 @@ export async function requestPasswordReset(input: { email: string }): Promise<Si
   const parsed = emailSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message };
   if (!emailOn()) return { ok: false, error: "Password reset by email isn't switched on yet. Contact us and we'll help you get back in." };
+  const perIp = await hit(`reset:ip:${await clientIp()}`, LIMITS.resetPerIp);
+  if (!perIp.ok) return { ok: false, error: `Too many reset requests. Try again in ${waitLabel(perIp.retryAfterSeconds)}.` };
   try {
-    const user = await prisma.user.findUnique({
-      where: { email: parsed.data.email },
-      select: { id: true, name: true, email: true, passwordHash: true },
-    });
+    // Per inbox: quietly stop sending (the answer stays the same, so it reveals nothing)
+    const perEmail = await hit(`reset:email:${parsed.data.email}`, LIMITS.resetPerEmail);
+    const user = perEmail.ok
+      ? await prisma.user.findUnique({ where: { email: parsed.data.email }, select: { id: true, name: true, email: true, passwordHash: true } })
+      : null;
     if (user) await sendPasswordResetEmail(user);
   } catch (error) {
     console.error("requestPasswordReset failed", error);
@@ -192,6 +200,8 @@ export async function changeMyPassword(input: { current: string; password: strin
   if (!customer) return { ok: false, formError: "Sign in again." };
   const parsed = newPasswordSchema.safeParse(input);
   if (!parsed.success) return { ok: false, fieldErrors: fieldErrors(parsed.error) };
+  const limit = await hit(`password-change:user:${customer.id}`, LIMITS.passwordChangePerUser);
+  if (!limit.ok) return { ok: false, formError: `Too many attempts. Try again in ${waitLabel(limit.retryAfterSeconds)}.` };
   const user = await prisma.user.findUnique({ where: { id: customer.id }, select: { passwordHash: true } });
   if (!user?.passwordHash || !(await bcrypt.compare(String(input.current), user.passwordHash))) {
     return { ok: false, fieldErrors: { current: "That's not your current password." } };
