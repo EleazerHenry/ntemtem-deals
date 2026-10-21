@@ -12,6 +12,14 @@ export default async function CheckoutPage() {
   const user = session?.user?.id
     ? await prisma.user.findUnique({ where: { id: session.user.id }, select: { name: true, email: true, phone: true } })
     : null;
+  // Signed-in: start from their default (or latest) delivery address
+  const address = session?.user?.id
+    ? await prisma.address.findFirst({
+        where: { userId: session.user.id, NOT: { area: "Free pickup" } },
+        orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
+        select: { fullName: true, phone: true, city: true, area: true, landmark: true },
+      })
+    : null;
 
   return (
     <div className="mx-auto max-w-6xl px-4 pt-6 pb-16 sm:px-8 sm:pt-10">
@@ -19,7 +27,14 @@ export default async function CheckoutPage() {
       <CheckoutForm
         zones={zones}
         signedIn={!!user}
-        prefill={{ fullName: user?.name ?? "", email: user?.email ?? "", phone: user?.phone ?? "" }}
+        prefill={{
+          fullName: address?.fullName ?? user?.name ?? "",
+          email: user?.email ?? "",
+          phone: address?.phone ?? user?.phone ?? "",
+          city: address && zones.some((z) => z.city === address.city) ? address.city : "",
+          area: address?.area ?? "",
+          landmark: address?.landmark ?? "",
+        }}
       />
     </div>
   );

@@ -119,7 +119,7 @@ export async function settleTransaction(tx: PaystackTransaction): Promise<Settle
       data: {
         orderId: order.id,
         status: order.status,
-        note: `Payment ${tx.reference} came back as ${tx.currency} ${tx.amount / 100} — expected GHS ${payment.amount.toNumber()}. Check it in Paystack before confirming.`,
+        note: `Internal: payment ${tx.reference} came back as ${tx.currency} ${tx.amount / 100} — expected GHS ${payment.amount.toNumber()}. Check it in Paystack before confirming.`,
       },
     });
     return { outcome: "mismatch", ...ref };
@@ -144,7 +144,7 @@ export async function settleTransaction(tx: PaystackTransaction): Promise<Settle
         note:
           order.status === "PENDING"
             ? `Payment received${method === "MOMO" ? " by Mobile Money" : method === "CARD" ? " by card" : ""} — we're getting your order ready to source.`
-            : `Payment received while the order was ${order.status.toLowerCase()} — needs a look.`,
+            : `Internal: payment received while the order was ${order.status.toLowerCase()} — needs a look.`,
       },
     });
     return true;

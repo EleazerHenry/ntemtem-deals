@@ -27,11 +27,19 @@ export function CheckoutForm({
 }: {
   zones: Zone[];
   signedIn: boolean;
-  prefill: { fullName: string; email: string; phone: string };
+  prefill: { fullName: string; email: string; phone: string; city?: string; area?: string; landmark?: string };
 }) {
   const router = useRouter();
   const { cart, setOpen, refresh } = useCart();
-  const [form, setForm] = useState({ ...prefill, city: "", method: "delivery" as "delivery" | "pickup", area: "", landmark: "" });
+  const [form, setForm] = useState({
+    fullName: prefill.fullName,
+    email: prefill.email,
+    phone: prefill.phone,
+    city: prefill.city ?? "",
+    method: "delivery" as "delivery" | "pickup",
+    area: prefill.area ?? "",
+    landmark: prefill.landmark ?? "",
+  });
   const [errors, setErrors] = useState<CheckoutFieldErrors>({});
   const [formError, setFormError] = useState("");
   const [codeInput, setCodeInput] = useState("");

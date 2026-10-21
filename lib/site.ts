@@ -25,6 +25,7 @@ export const site = {
     { label: "Terms", href: "/policies/terms" },
   ],
   help: [
+    { label: "Track an order", href: "/track" },
     { label: "About us", href: "/about" },
     { label: "Contact", href: "/contact" },
     { label: "FAQ", href: "/faq" },

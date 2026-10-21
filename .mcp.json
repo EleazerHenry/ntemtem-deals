@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "node",
+      "args": [
+        "C:/Users/eleaz/Desktop/Projects/ntemtem-deals/node_modules/@playwright/mcp/cli.js"
+      ]
+    }
+  }
+}

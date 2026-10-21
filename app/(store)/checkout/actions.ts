@@ -101,17 +101,24 @@ export async function placeOrder(input: CheckoutInput): Promise<PlaceOrderResult
               if (used.count === 0) throw new CouponUsedUp();
             }
 
-            const address = await tx.address.create({
-              data: {
-                userId: user?.id ?? null,
-                fullName: data.fullName,
-                phone: data.phone,
-                city: data.city,
-                area: data.method === "pickup" ? "Free pickup" : data.area,
-                landmark: data.landmark || null,
-              },
-              select: { id: true },
-            });
+            const addressData = {
+              fullName: data.fullName,
+              phone: data.phone,
+              city: data.city,
+              area: data.method === "pickup" ? "Free pickup" : data.area,
+              landmark: data.landmark || null,
+            };
+            // Signed-in customers: reuse an identical saved address instead of piling up copies
+            const existingAddress = user
+              ? await tx.address.findFirst({ where: { userId: user.id, ...addressData }, select: { id: true } })
+              : null;
+            const hasDefault = user ? (await tx.address.count({ where: { userId: user.id, isDefault: true } })) > 0 : true;
+            const address =
+              existingAddress ??
+              (await tx.address.create({
+                data: { ...addressData, userId: user?.id ?? null, isDefault: !hasDefault && data.method === "delivery" },
+                select: { id: true },
+              }));
 
             const created = await tx.order.create({
               data: {

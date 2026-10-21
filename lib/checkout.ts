@@ -48,10 +48,15 @@ export function orderTotal(subtotal: number, deliveryFee: number, discount: numb
   return round2(Math.max(0, subtotal - discount) + deliveryFee);
 }
 
-/** NTD-0001, NTD-0002… (callers retry on the rare clash). */
+/**
+ * NTD-0001, NTD-0002… (callers retry on the rare clash). Takes the highest
+ * number numerically — not the newest by date, and not a text sort, which
+ * would put NTD-10000 before NTD-9999.
+ */
 export async function nextOrderNumber(db: Prisma.TransactionClient) {
-  const last = await db.order.findFirst({ orderBy: { createdAt: "desc" }, select: { orderNumber: true } });
-  const n = Number(last?.orderNumber.match(/(\d+)$/)?.[1] ?? 0) + 1;
+  const [row] = await db.$queryRaw<{ max: number | null }[]>`
+    SELECT MAX(CAST(SUBSTRING("orderNumber" FROM '[0-9]+$') AS INTEGER)) AS max FROM "Order"`;
+  const n = Number(row?.max ?? 0) + 1;
   return `NTD-${String(n).padStart(4, "0")}`;
 }
 
