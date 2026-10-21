@@ -235,7 +235,12 @@ export function ProductView({
         <ul className="grid gap-3 border-t pt-6 text-sm sm:grid-cols-3">
           <Perk icon={Truck} title={`Delivered in ${cities.join(", ")}`} body="Outside Accra? We help with onward transport" href="/policies/delivery" />
           <Perk icon={Smartphone} title="MoMo or card" body="Pay securely at checkout" />
-          <Perk icon={BadgeCheck} title="Peace of mind" body="Refunds if something's wrong" href="/policies/returns" />
+          <Perk
+            icon={BadgeCheck}
+            title="Peace of mind"
+            body="Full refund if your order doesn't arrive, or arrives damaged, in Accra."
+            href="/policies/returns"
+          />
         </ul>
       </div>
 

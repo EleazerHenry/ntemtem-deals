@@ -25,6 +25,7 @@ export default function ReturnsPage() {
           <li>arrives damaged or faulty, or</li>
           <li>is clearly not what was described or ordered.</li>
         </ul>
+        <p>We can&apos;t cover damage that happens during onward delivery outside Accra.</p>
 
         <h2>Change of mind</h2>
         <p>

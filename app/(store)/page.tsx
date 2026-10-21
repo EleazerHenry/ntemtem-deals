@@ -170,7 +170,7 @@ function TrustStrip() {
     { icon: Truck, title: `In Accra in ${site.deliveryDays}`, body: "Counted from payment, tracked every step" },
     { icon: Smartphone, title: "MoMo or card", body: "MTN, Telecel, AirtelTigo & cards" },
     { icon: MapPin, title: "Delivery in Accra", body: "Elsewhere? We help with onward transport" },
-    { icon: BadgeCheck, title: "Quality checked", body: "Refunds if something's wrong" },
+    { icon: BadgeCheck, title: "Quality checked", body: "Full refund if it doesn't arrive or arrives damaged" },
   ];
   return (
     <section className="mx-auto max-w-7xl px-4 pt-6 sm:px-8">
